@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/assets/css/adminlte.css">
+    <!--<link rel="stylesheet" href="/vendor/leon-mbs/zippy/assets/css/bootstrap.css">   -->
+    <link rel="stylesheet" href="/vendor/leon-mbs/zippy/assets/css/zippy-bundle.min.css">
+    <link rel="stylesheet" href="/assets/css/toastr.min.css">
+    <link rel="stylesheet" href="/assets/css/select2.css">
+    <link rel="stylesheet" href="/assets/css/select2-bootstrap.css">
+    <link rel="stylesheet" href="/assets/js/summernote/summernote-bs4.css">
+    <link rel="stylesheet" href="/assets/css/app.css">
+
+    <script src="/vendor/leon-mbs/zippy/assets/js/jquery/jquery.js" type="text/javascript"></script><style id="vrsl_"></style>
+    <script src="/assets/js/bootstrap.bundle.js" type="text/javascript"></script>
+    <script src="/vendor/leon-mbs/zippy/assets/js/zippy-bundle.min.js" type="text/javascript"></script>
+    <script src="/assets/js/select2.js" type="text/javascript"></script>
+    <script src="/assets/js/toastr.min.js" type="text/javascript"></script>
+    <script src="/assets/js/printThis.js" type="text/javascript"></script>
+    <script src="/assets/js/summernote/summernote-bs4.js" type="text/javascript"></script>
+    <script src="/assets/js/summernote/lang/summernote-ru-RU.js" type="text/javascript"></script>
+
+    <script src="/assets/js/adminlte.js" type="text/javascript"></script>
+    <script src="/assets/js/app.js" type="text/javascript"></script>
+
+    <title>Производство</title>
+</head>
+<body>
+<aside class="main-sidebar sidebar-dark-primary elevation-4">
+    <!-- Brand Logo -->
+    <a href="/index.php" class="brand-link">
+
+        <span class="brand-text font-weight-light">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Zippy  Склад</span>
+    </a>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <nav class="mt-2">
+            <ul class="nav  nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+
+
+                <li class="nav-item  ">
+                    <a href="/index.php" class="nav-link">
+                        <i class="nav-icon fa fa-home"></i>
+                        <p>
+                            Главная
+                        </p>
+                    </a>
+                </li>
+
+                <!--<li class="nav-item  ">-->
+                <!--<a href="?p=/App/Pages/Main" class="nav-link">-->
+                <!--<i class="nav-icon fa fa-chart-pie"></i>-->
+                <!--<p>-->
+                <!--Дашборд-->
+                <!--</p>-->
+                <!--</a>-->
+                <!--</li>-->
+                <li class="nav-item">
+                    <a href="../../assets/production.html" class="nav-link">
+                        <i class="nav-icon fa fa-bacon"></i>
+                        <p>
+                            Производство
+                            <i class="right fas fa-angle-left"></i>
+                        </p>
+                    </a>
+                    <ul class="nav nav-treeview">
+                        <li class="nav-item has-treeview">
+                            <a href="#" class="nav-link">
+                                <i class="fa nav-icon"></i>
+                                <p>Паспорт
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+
+                <li class="nav-item has-treeview">
+                    <a href="#" class="nav-link">
+                        <i class="nav-icon fa fa-file"></i>
+                        <p>
+                            Документы
+                            <i class="right fas fa-angle-left"></i>
+                        </p>
+                    </a>
+                    <ul class="nav nav-treeview">
+
+                        <li class="nav-item has-treeview">
+                            <a href="#" class="nav-link">
+                                <i class="fa    nav-icon"></i>
+                                <p>Продажи
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item  has-treeview">
+                                    <a href="/index.php?p=App/Pages/Doc/ReturnIssue" class="nav-link">
+                                        <i class="fa    nav-icon"></i>
+                                        <p>&nbsp;&nbsp;&nbsp;&nbsp;Возврат от покупателя</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item  has-treeview">
+                                    <a href="/index.php?p=App/Pages/Doc/Warranty" class="nav-link">
+                                        <i class="fa    nav-icon"></i>
+                                        <p>&nbsp;&nbsp;&nbsp;&nbsp;Гарантийный талон</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item  has-treeview">
+                                    <a href="/index.php?p=App/Pages/Doc/Order" class="nav-link">
+                                        <i class="fa    nav-icon"></i>
+                                        <p>&nbsp;&nbsp;&nbsp;&nbsp;Заказ</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item  has-treeview">
+                                    <a href="/index.php?p=App/Pages/Doc/POSCheck" class="nav-link">
+                                        <i class="fa    nav-icon"></i>
+                                        <p>&nbsp;&nbsp;&nbsp;&nbsp;Кассовый чек</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item  has-treeview">
+                                    <a href="/index.php?p=App/Pages/Doc/GoodsIssue" class="nav-link">
+                                        <i class="fa    nav-icon"></i>
+                                        <p>&nbsp;&nbsp;&nbsp;&nbsp;Расходная накладная</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item  has-treeview">
+                                    <a href="/index.php?p=App/Pages/Doc/Invoice" class="nav-link">
+                                        <i class="fa    nav-icon"></i>
+                                        <p>&nbsp;&nbsp;&nbsp;&nbsp;Счет-фактура</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item  has-treeview">
+                                    <a href="/index.php?p=App/Pages/Doc/TTN" class="nav-link">
+                                        <i class="fa    nav-icon"></i>
+                                        <p>&nbsp;&nbsp;&nbsp;&nbsp;Товарно-транспортная накладная</p>
+                                    </a>
+                                </li>
+                            </ul>
+
+
+                        </li><li class="nav-item has-treeview">
+                        <a href="#" class="nav-link">
+                            <i class="fa    nav-icon"></i>
+                            <p>Закупки
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item  has-treeview">
+                                <a href="/index.php?p=App/Pages/Doc/RetCustIssue" class="nav-link">
+                                    <i class="fa    nav-icon"></i>
+                                    <p>&nbsp;&nbsp;&nbsp;&nbsp;Возврат поставщику</p>
+                                </a>
+                            </li>
+                            <li class="nav-item  has-treeview">
+                                <a href="/index.php?p=App/Pages/Doc/OrderCust" class="nav-link">
+                                    <i class="fa    nav-icon"></i>
+                                    <p>&nbsp;&nbsp;&nbsp;&nbsp;Заявка  поставщику</p>
+                                </a>
+                            </li>
+                            <li class="nav-item  has-treeview">
+                                <a href="/index.php?p=App/Pages/Doc/GoodsReceipt" class="nav-link">
+                                    <i class="fa    nav-icon"></i>
+                                    <p>&nbsp;&nbsp;&nbsp;&nbsp;Приходная накладная</p>
+                                </a>
+                            </li>
+                            <li class="nav-item  has-treeview">
+                                <a href="/index.php?p=App/Pages/Doc/InvoiceCust" class="nav-link">
+                                    <i class="fa    nav-icon"></i>
+                                    <p>&nbsp;&nbsp;&nbsp;&nbsp;Счет входящий</p>
+                                </a>
+                            </li>
+                        </ul>
+
+
+                    </li><li class="nav-item has-treeview">
+                        <a href="#" class="nav-link">
+                            <i class="fa    nav-icon"></i>
+                            <p>Касса и платежи
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item  has-treeview">
+                                <a href="/index.php?p=App/Pages/Doc/OutSalary" class="nav-link">
+                                    <i class="fa    nav-icon"></i>
+                                    <p>&nbsp;&nbsp;&nbsp;&nbsp;Выплата зарплаты</p>
+                                </a>
+                            </li>
+                            <li class="nav-item  has-treeview">
+                                <a href="/index.php?p=App/Pages/Doc/MoveMoney" class="nav-link">
+                                    <i class="fa    nav-icon"></i>
+                                    <p>&nbsp;&nbsp;&nbsp;&nbsp;Перемещение  денег</p>
+                                </a>
+                            </li>
+                            <li class="nav-item  has-treeview">
+                                <a href="/index.php?p=App/Pages/Doc/IncomeMoney" class="nav-link">
+                                    <i class="fa    nav-icon"></i>
+                                    <p>&nbsp;&nbsp;&nbsp;&nbsp;Приходный ордер</p>
+                                </a>
+                            </li>
+                            <li class="nav-item  has-treeview">
+                                <a href="/index.php?p=App/Pages/Doc/OutcomeMoney" class="nav-link">
+                                    <i class="fa    nav-icon"></i>
+                                    <p>&nbsp;&nbsp;&nbsp;&nbsp;Расходный ордер</p>
+                                </a>
+                            </li>
+                        </ul>
+
+
+                    </li><li class="nav-item has-treeview">
+                        <a href="#" class="nav-link">
+                            <i class="fa    nav-icon"></i>
+                            <p>Склад
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item  has-treeview">
+                                <a href="/index.php?p=App/Pages/Doc/Inventory" class="nav-link">
+                                    <i class="fa    nav-icon"></i>
+                                    <p>&nbsp;&nbsp;&nbsp;&nbsp;Инвентаризация</p>
+                                </a>
+                            </li>
+                            <li class="nav-item  has-treeview">
+                                <a href="/index.php?p=App/Pages/Doc/IncomeItem" class="nav-link">
+                                    <i class="fa    nav-icon"></i>
+                                    <p>&nbsp;&nbsp;&nbsp;&nbsp;Оприходование ТМЦ</p>
+                                </a>
+                            </li>
+                            <li class="nav-item  has-treeview">
+                                <a href="/index.php?p=App/Pages/Doc/TransItem" class="nav-link">
+                                    <i class="fa    nav-icon"></i>
+                                    <p>&nbsp;&nbsp;&nbsp;&nbsp;Перекомплектация ТМЦ</p>
+                                </a>
+                            </li>
+                            <li class="nav-item  has-treeview">
+                                <a href="/index.php?p=App/Pages/Doc/MoveItem" class="nav-link">
+                                    <i class="fa    nav-icon"></i>
+                                    <p>&nbsp;&nbsp;&nbsp;&nbsp;Перемещение товара</p>
+                                </a>
+                            </li>
+                            <li class="nav-item  has-treeview">
+                                <a href="/index.php?p=App/Pages/Doc/OutcomeItem" class="nav-link">
+                                    <i class="fa    nav-icon"></i>
+                                    <p>&nbsp;&nbsp;&nbsp;&nbsp;Списание ТМЦ</p>
+                                </a>
+                            </li>
+                        </ul>
+
+
+                    </li><li class="nav-item has-treeview">
+                        <a href="#" class="nav-link">
+                            <i class="fa    nav-icon"></i>
+                            <p>Производство
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item  has-treeview">
+                                <a href="/index.php?p=App/Pages/Doc/Task" class="nav-link">
+                                    <i class="fa    nav-icon"></i>
+                                    <p>&nbsp;&nbsp;&nbsp;&nbsp;Наряд</p>
+                                </a>
+                            </li>
+                            <li class="nav-item  has-treeview">
+                                <a href="/index.php?p=App/Pages/Doc/ProdReceipt" class="nav-link">
+                                    <i class="fa    nav-icon"></i>
+                                    <p>&nbsp;&nbsp;&nbsp;&nbsp;Оприходование  с  производства</p>
+                                </a>
+                            </li>
+                            <li class="nav-item  has-treeview">
+                                <a href="/index.php?p=App/Pages/Doc/ProdIssue" class="nav-link">
+                                    <i class="fa    nav-icon"></i>
+                                    <p>&nbsp;&nbsp;&nbsp;&nbsp;Списание на  производство</p>
+                                </a>
+                            </li>
+                        </ul>
+
+
+
+                    </li>
+                        <li class="nav-item  has-treeview">
+                            <a href="/index.php?p=App/Pages/Doc/OrderFood" class="nav-link">
+                                <i class="fa    nav-icon"></i>
+                                <p>&nbsp;&nbsp;Заказ (общепит)</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item  has-treeview">
+                            <a href="/index.php?p=App/Pages/Doc/ServiceAct" class="nav-link">
+                                <i class="fa    nav-icon"></i>
+                                <p>&nbsp;&nbsp;Заказ (услуги)</p>
+                            </a>
+                        </li>
+                    </ul>
+
+                </li>
+                <li class="nav-item has-treeview">
+                    <a href="#" class="nav-link">
+                        <i class="nav-icon fa fa-chart-bar"></i>
+                        <p>
+                            Отчеты
+                            <i class="right fas fa-angle-left"></i>
+                        </p>
+                    </a>
+                    <ul class="nav nav-treeview">
+
+                        <li class="nav-item has-treeview">
+                            <a href="#" class="nav-link">
+                                <i class="fa    nav-icon"></i>
+                                <p>Касса и платежи
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item  has-treeview">
+                                    <a href="/index.php?p=App/Pages/Report/CustActivity" class="nav-link">
+                                        <i class="fa    nav-icon"></i>
+                                        <p>&nbsp;&nbsp;&nbsp;&nbsp;Движение  по  контрагентам</p>
+                                    </a>
+                                </li>
+                            </ul>
+
+
+                        </li><li class="nav-item has-treeview">
+                        <a href="#" class="nav-link">
+                            <i class="fa    nav-icon"></i>
+                            <p>Платежи
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item  has-treeview">
+                                <a href="/index.php?p=App/Pages/Report/PayActivity" class="nav-link">
+                                    <i class="fa    nav-icon"></i>
+                                    <p>&nbsp;&nbsp;&nbsp;&nbsp;Движение по денежным счетам</p>
+                                </a>
+                            </li>
+                        </ul>
+
+
+                    </li><li class="nav-item has-treeview">
+                        <a href="#" class="nav-link">
+                            <i class="fa    nav-icon"></i>
+                            <p>Склад
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item  has-treeview">
+                                <a href="/index.php?p=App/Pages/Report/ItemActivity" class="nav-link">
+                                    <i class="fa    nav-icon"></i>
+                                    <p>&nbsp;&nbsp;&nbsp;&nbsp;Движение по складу</p>
+                                </a>
+                            </li>
+                            <li class="nav-item  has-treeview">
+                                <a href="/index.php?p=App/Pages/Report/NoLiq" class="nav-link">
+                                    <i class="fa    nav-icon"></i>
+                                    <p>&nbsp;&nbsp;&nbsp;&nbsp;Неликвидные товары</p>
+                                </a>
+                            </li>
+                            <li class="nav-item  has-treeview">
+                                <a href="/index.php?p=App/Pages/Report/Price" class="nav-link">
+                                    <i class="fa    nav-icon"></i>
+                                    <p>&nbsp;&nbsp;&nbsp;&nbsp;Прайс</p>
+                                </a>
+                            </li>
+                        </ul>
+
+
+                    </li><li class="nav-item has-treeview">
+                        <a href="#" class="nav-link">
+                            <i class="fa    nav-icon"></i>
+                            <p>Закупки
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item  has-treeview">
+                                <a href="/index.php?p=App/Pages/Report/Income" class="nav-link">
+                                    <i class="fa    nav-icon"></i>
+                                    <p>&nbsp;&nbsp;&nbsp;&nbsp;Закупки</p>
+                                </a>
+                            </li>
+                            <li class="nav-item  has-treeview">
+                                <a href="/index.php?p=App/Pages/Report/CustOrder" class="nav-link">
+                                    <i class="fa    nav-icon"></i>
+                                    <p>&nbsp;&nbsp;&nbsp;&nbsp;Товары в  пути</p>
+                                </a>
+                            </li>
+                        </ul>
+
+
+                    </li><li class="nav-item has-treeview">
+                        <a href="#" class="nav-link">
+                            <i class="fa    nav-icon"></i>
+                            <p>Зарплата
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item  has-treeview">
+                                <a href="/index.php?p=App/Pages/Report/SalaryRep" class="nav-link">
+                                    <i class="fa    nav-icon"></i>
+                                    <p>&nbsp;&nbsp;&nbsp;&nbsp;Отчет по  зарплате</p>
+                                </a>
+                            </li>
+                            <li class="nav-item  has-treeview">
+                                <a href="/index.php?p=App/Pages/Report/Timestat" class="nav-link">
+                                    <i class="fa    nav-icon"></i>
+                                    <p>&nbsp;&nbsp;&nbsp;&nbsp;Рабочее время</p>
+                                </a>
+                            </li>
+                        </ul>
+
+
+                    </li><li class="nav-item has-treeview">
+                        <a href="#" class="nav-link">
+                            <i class="fa    nav-icon"></i>
+                            <p>Производство
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item  has-treeview">
+                                <a href="/index.php?p=App/Pages/Report/EmpTask" class="nav-link">
+                                    <i class="fa    nav-icon"></i>
+                                    <p>&nbsp;&nbsp;&nbsp;&nbsp;Отчет по нарядам</p>
+                                </a>
+                            </li>
+                            <li class="nav-item  has-treeview">
+                                <a href="/index.php?p=App/Pages/Report/Prod" class="nav-link">
+                                    <i class="fa    nav-icon"></i>
+                                    <p>&nbsp;&nbsp;&nbsp;&nbsp;Отчет по производству</p>
+                                </a>
+                            </li>
+                        </ul>
+
+
+                    </li><li class="nav-item has-treeview">
+                        <a href="#" class="nav-link">
+                            <i class="fa    nav-icon"></i>
+                            <p>Продажи
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item  has-treeview">
+                                <a href="/index.php?p=App/Pages/Report/Outcome" class="nav-link">
+                                    <i class="fa    nav-icon"></i>
+                                    <p>&nbsp;&nbsp;&nbsp;&nbsp;Продажи</p>
+                                </a>
+                            </li>
+                        </ul>
+
+
+
+                    </li>
+                        <li class="nav-item  has-treeview">
+                            <a href="/index.php?p=App/Pages/Report/ABC" class="nav-link">
+                                <i class="fa    nav-icon"></i>
+                                <p>&nbsp;&nbsp;ABC анализ</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item  has-treeview">
+                            <a href="/index.php?p=App/Pages/Report/PayBalance" class="nav-link">
+                                <i class="fa    nav-icon"></i>
+                                <p>&nbsp;&nbsp;Финансовые результаты</p>
+                            </a>
+                        </li>
+
+                    </ul>
+
+                </li>
+                <li class="nav-item has-treeview">
+                    <a href="#" class="nav-link">
+                        <i class="nav-icon fa fa-list"></i>
+                        <p>
+                            Журналы
+                            <i class="right fas fa-angle-left"></i>
+                        </p>
+                    </a>
+                    <ul class="nav nav-treeview">
+                        <li class="nav-item has-treeview">
+                            <a href="#" class="nav-link">
+                                <i class="fa    nav-icon"></i>
+                                <p>Склад
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item  has-treeview">
+                                    <a href="/index.php?p=App/Pages/Register/StockList" class="nav-link">
+                                        <i class="fa    nav-icon"></i>
+                                        <p>&nbsp;&nbsp;&nbsp;&nbsp;Движение  ТМЦ</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item  has-treeview">
+                                    <a href="/index.php?p=App/Pages/Register/ItemList" class="nav-link">
+                                        <i class="fa    nav-icon"></i>
+                                        <p>&nbsp;&nbsp;&nbsp;&nbsp;Товары  на  складе</p>
+                                    </a>
+                                </li>
+                            </ul>
+
+
+                        </li><li class="nav-item has-treeview">
+                        <a href="#" class="nav-link">
+                            <i class="fa    nav-icon"></i>
+                            <p>Общепит
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item  has-treeview">
+                                <a href="/index.php?p=App/Pages/Register/DeliveryList" class="nav-link">
+                                    <i class="fa    nav-icon"></i>
+                                    <p>&nbsp;&nbsp;&nbsp;&nbsp;Журнал доставок</p>
+                                </a>
+                            </li>
+                        </ul>
+
+
+                    </li><li class="nav-item has-treeview">
+                        <a href="#" class="nav-link">
+                            <i class="fa    nav-icon"></i>
+                            <p>Касса и платежи
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item  has-treeview">
+                                <a href="/index.php?p=App/Pages/Register/PayList" class="nav-link">
+                                    <i class="fa    nav-icon"></i>
+                                    <p>&nbsp;&nbsp;&nbsp;&nbsp;Журнал платежей</p>
+                                </a>
+                            </li>
+                            <li class="nav-item  has-treeview">
+                                <a href="/index.php?p=App/Pages/Register/PayBayList" class="nav-link">
+                                    <i class="fa    nav-icon"></i>
+                                    <p>&nbsp;&nbsp;&nbsp;&nbsp;Расчеты с покупателями</p>
+                                </a>
+                            </li>
+                            <li class="nav-item  has-treeview">
+                                <a href="/index.php?p=App/Pages/Register/PaySelList" class="nav-link">
+                                    <i class="fa    nav-icon"></i>
+                                    <p>&nbsp;&nbsp;&nbsp;&nbsp;Расчеты с поставщиками</p>
+                                </a>
+                            </li>
+                        </ul>
+
+
+                    </li><li class="nav-item has-treeview">
+                        <a href="#" class="nav-link">
+                            <i class="fa    nav-icon"></i>
+                            <p>Продажи
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item  has-treeview">
+                                <a href="/index.php?p=App/Pages/Register/OrderList" class="nav-link">
+                                    <i class="fa    nav-icon"></i>
+                                    <p>&nbsp;&nbsp;&nbsp;&nbsp;Заказы клиентов</p>
+                                </a>
+                            </li>
+                            <li class="nav-item  has-treeview">
+                                <a href="/index.php?p=App/Pages/Register/GIList" class="nav-link">
+                                    <i class="fa    nav-icon"></i>
+                                    <p>&nbsp;&nbsp;&nbsp;&nbsp;Продажи</p>
+                                </a>
+                            </li>
+                        </ul>
+
+
+                    </li><li class="nav-item has-treeview">
+                        <a href="#" class="nav-link">
+                            <i class="fa    nav-icon"></i>
+                            <p>Закупки
+                                <i class="right fas fa-angle-left"></i>
+                            </p>
+
+                        </a>
+                        <ul class="nav nav-treeview">
+                            <li class="nav-item  has-treeview">
+                                <a href="/index.php?p=App/Pages/Register/GRList" class="nav-link">
+                                    <i class="fa    nav-icon"></i>
+                                    <p>&nbsp;&nbsp;&nbsp;&nbsp;Закупки</p>
+                                </a>
+                            </li>
+                            <li class="nav-item  has-treeview">
+                                <a href="/index.php?p=App/Pages/Register/OrderCustList" class="nav-link">
+                                    <i class="fa    nav-icon"></i>
+                                    <p>&nbsp;&nbsp;&nbsp;&nbsp;Заявки поставщикам</p>
+                                </a>
+                            </li>
+                        </ul>
+
+
+
+                    </li>
+                        <li class="nav-item  has-treeview">
+                            <a href="/index.php?p=App/Pages/Register/IOState" class="nav-link">
+                                <i class="fa    nav-icon"></i>
+                                <p>&nbsp;&nbsp;Доходы и расходы</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item  has-treeview">
+                            <a href="/index.php?p=App/Pages/Register/DocList" class="nav-link">
+                                <i class="fa    nav-icon"></i>
+                                <p>&nbsp;&nbsp;Журнал документов</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item  has-treeview">
+                            <a href="/index.php?p=App/Pages/Register/TaskList" class="nav-link">
+                                <i class="fa    nav-icon"></i>
+                                <p>&nbsp;&nbsp;Наряды</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item  has-treeview">
+                            <a href="/index.php?p=App/Pages/Register/SerList" class="nav-link">
+                                <i class="fa    nav-icon"></i>
+                                <p>&nbsp;&nbsp;Работы, услуги</p>
+                            </a>
+                        </li>
+                    </ul>
+
+                </li>
+                <li class="nav-item has-treeview">
+                    <a href="#" class="nav-link">
+                        <i class="nav-icon fa fa-book"></i>
+                        <p>
+                            Справочники
+                            <i class="right fas fa-angle-left"></i>
+                        </p>
+                    </a>
+                    <ul class="nav nav-treeview">
+                        <li class="nav-item has-treeview">
+                            <a href="#" class="nav-link">
+                                <i class="fa    nav-icon"></i>
+                                <p>ТМЦ
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item  has-treeview">
+                                    <a href="/index.php?p=App/Pages/Reference/CategoryList" class="nav-link">
+                                        <i class="fa    nav-icon"></i>
+                                        <p>&nbsp;&nbsp;&nbsp;&nbsp;Категории </p>
+                                    </a>
+                                </li>
+                                <li class="nav-item  has-treeview">
+                                    <a href="/index.php?p=App/Pages/Reference/ItemList" class="nav-link">
+                                        <i class="fa    nav-icon"></i>
+                                        <p>&nbsp;&nbsp;&nbsp;&nbsp;Номенклатура</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item  has-treeview">
+                                    <a href="/index.php?p=App/Pages/Reference/StoreList" class="nav-link">
+                                        <i class="fa    nav-icon"></i>
+                                        <p>&nbsp;&nbsp;&nbsp;&nbsp;Склады</p>
+                                    </a>
+                                </li>
+                            </ul>
+
+
+
+                        </li>
+                        <li class="nav-item  has-treeview">
+                            <a href="/index.php?p=App/Pages/Reference/ContractList" class="nav-link">
+                                <i class="fa    nav-icon"></i>
+                                <p>&nbsp;&nbsp;Договора</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item  has-treeview">
+                            <a href="/index.php?p=App/Pages/Reference/MFList" class="nav-link">
+                                <i class="fa    nav-icon"></i>
+                                <p>&nbsp;&nbsp;Кассы</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item  has-treeview">
+                            <a href="/index.php?p=App/Pages/Reference/CustomerList" class="nav-link">
+                                <i class="fa    nav-icon"></i>
+                                <p>&nbsp;&nbsp;Контрагенты</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item  has-treeview">
+                            <a href="/index.php?p=App/Pages/Reference/EqList" class="nav-link">
+                                <i class="fa    nav-icon"></i>
+                                <p>&nbsp;&nbsp;Оборудование и ОС</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item  has-treeview">
+                            <a href="/index.php?p=App/Pages/Reference/ProdAreaList" class="nav-link">
+                                <i class="fa    nav-icon"></i>
+                                <p>&nbsp;&nbsp;Производственные участки</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item  has-treeview">
+                            <a href="/index.php?p=App/Pages/Reference/EmployeeList" class="nav-link">
+                                <i class="fa    nav-icon"></i>
+                                <p>&nbsp;&nbsp;Сотрудники</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item  has-treeview">
+                            <a href="/index.php?p=App/Pages/Reference/ServiceList" class="nav-link">
+                                <i class="fa    nav-icon"></i>
+                                <p>&nbsp;&nbsp;Услуги, работы</p>
+                            </a>
+                        </li>
+
+
+
+                    </ul>
+
+                </li>
+                <li class="nav-item has-treeview">
+                    <a href="#" class="nav-link">
+                        <i class="nav-icon fas fa-project-diagram"></i>
+                        <p>
+                            Сервисные страницы
+                            <i class="right fas fa-angle-left"></i>
+                        </p>
+                    </a>
+                    <ul class="nav nav-treeview">
+                        <li class="nav-item has-treeview">
+                            <a href="#" class="nav-link">
+                                <i class="fa    nav-icon"></i>
+                                <p>Общепит
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+
+                            </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item  has-treeview">
+                                    <a href="/index.php?p=App/Pages/Service/ARMFood" class="nav-link">
+                                        <i class="fa    nav-icon"></i>
+                                        <p>&nbsp;&nbsp;&nbsp;&nbsp;АРМ кассира</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item  has-treeview">
+                                    <a href="/index.php?p=App/Pages/Service/ArmProdFood" class="nav-link">
+                                        <i class="fa    nav-icon"></i>
+                                        <p>&nbsp;&nbsp;&nbsp;&nbsp;АРМ кухни (бара)</p>
+                                    </a>
+                                </li>
+                            </ul>
+
+
+
+                        </li>
+                        <li class="nav-item  has-treeview">
+                            <a href="/index.php?p=App/Pages/Service/ARMPos" class="nav-link">
+                                <i class="fa    nav-icon"></i>
+                                <p>&nbsp;&nbsp;АРМ кассира</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item  has-treeview">
+                            <a href="/index.php?p=App/Pages/Service/Import" class="nav-link">
+                                <i class="fa    nav-icon"></i>
+                                <p>&nbsp;&nbsp;Импорт</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item  has-treeview">
+                            <a href="/index.php?p=App/Pages/Service/Export" class="nav-link">
+                                <i class="fa    nav-icon"></i>
+                                <p>&nbsp;&nbsp;Экспорт</p>
+                            </a>
+                        </li>
+
+
+                    </ul>
+
+                </li>
+                <li class="nav-item has-treeview">
+                    <a href="#" class="nav-link">
+                        <i class="nav-icon fa fa-puzzle-piece"></i>
+                        <p>
+                            Модули
+                            <i class="right fas fa-angle-left"></i>
+                        </p>
+                    </a>
+                    <ul class="nav nav-treeview">
+
+                        <li class="nav-item  has-treeview">
+                            <a href="/index.php?p=App/Modules/Note/Pages/Main" class="nav-link">
+                                <i class="fa    nav-icon"></i>
+                                <p> База знаний</p>
+                            </a>
+                        </li>
+
+
+
+
+                    </ul>
+
+                </li>
+
+                <li class="nav-item has-treeview">
+                    <a href="#" class="nav-link">
+                        <i class="nav-icon fa fa-cog"></i>
+                        <p>
+                            Система
+                            <i class="right fas fa-angle-left"></i>
+                        </p>
+                    </a>
+
+                    <ul class="nav nav-treeview">
+
+
+                        <li class="nav-item">
+                            <a href="#" class="nav-link">
+                                <i class="fa    nav-icon"></i>
+                                <p>Настройки
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
+
+                            </a>
+                            <ul class="nav nav-treeview">
+
+                                <li class="nav-item">
+                                    <a href="/index.php?p=App/Pages/Options" class="nav-link">
+                                        <i class="fa    nav-icon"></i>
+                                        <p>&nbsp;&nbsp;&nbsp;&nbsp;Общие</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="/index.php?p=App/Pages/MenuList" class="nav-link">
+                                        <i class="fa    nav-icon"></i>
+                                        <p>&nbsp;&nbsp;&nbsp;&nbsp;Настройка меню</p>
+                                    </a>
+                                </li>
+                            </ul>
+
+                        </li>
+
+
+                        <li class="nav-item">
+                            <a href="/index.php?p=App/Pages/FirmList" class="nav-link">
+                                <i class="fa    nav-icon"></i>
+                                <p>&nbsp;&nbsp;Компании</p>
+                            </a>
+                        </li>
+
+
+
+                        <li class="nav-item">
+                            <a href="/index.php?p=App/Pages/Roles" class="nav-link">
+                                <i class="fa    nav-icon"></i>
+                                <p>&nbsp;&nbsp;Роли</p>
+                            </a>
+                        </li>
+
+
+                        <li class="nav-item">
+                            <a href="/index.php?p=App/Pages/Users" class="nav-link">
+                                <i class="fa    nav-icon"></i>
+                                <p>&nbsp;&nbsp;Пользователи</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="/index.php?p=App/Pages/PosList" class="nav-link">
+                                <i class="fa    nav-icon"></i>
+                                <p>&nbsp;&nbsp;POS терминалы</p>
+                            </a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a href="/index.php?p=App/Pages/Subscribes" class="nav-link">
+                                <i class="fa    nav-icon"></i>
+                                <p>&nbsp;&nbsp;Подписки</p>
+                            </a>
+                        </li>
+
+                    </ul>
+
+                </li>
+                <li class="nav-item  ">
+                    <a href="https://zippy.com.ua/aboutus#contact" class="nav-link">
+                        <i class="nav-icon fas fa-phone-alt"></i>
+                        <p>
+                            Тех. поддержка
+
+                        </p>
+                    </a>
+                </li>
+
+            </ul>
+        </nav>
+    </div>
+    <!-- /.sidebar -->
+</aside>
+    <div>
+        <p>Product</p>
+    </div>
+</body>
+</html>

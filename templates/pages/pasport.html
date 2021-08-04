@@ -1,0 +1,70 @@
+<html lang="ru">
+<head>
+
+</head>
+<body>
+     <div class="row">
+         <h2>Паспорт модели</h2>
+     </div>
+    <form zippy="pasportForm">
+
+        <div class="row">
+            <div class="col-6 col-md-4 col-lg-3">
+                <div class="form-group">
+                    <label for="modelName">Наименование модели</label>
+                    <input type="text" class="form-control" zippy="modelName" required="required">
+                </div>
+
+                <div class="form-group">
+                    <label for="modelSize">Размеры модели</label>
+                    <select class="form-control" zippy="size">
+                        <option value="0">Не выбран</option>
+                        <option zippy="list">
+                            <span zippy="modelSize"></span>
+                        </option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <a zippy="addworks">Добавить список работ</a>
+                </div>
+            </div>
+
+        </div>
+
+
+    </form>
+
+    <form zippy="listWorkForm">
+        <div class="row">
+            <div class="col-8 col-md-6 col-lg-4">
+                <div class="form-group">
+                    <table class="table">
+                        <tr>
+                            <th>Вид работы</th>
+                            <th>Стоимость</th>
+                            <th>Выбрать</th>
+                        </tr>
+                        <tr zippy="listwork">
+                            <td><span zippy="typeWork"></span></td>
+                            <td><span zippy="price"></span></td>
+                            <!--<td><a  zippy="edit"><i class="fa fa-edit"></i></a> </td>-->
+                            <td>
+                                <input type="checkbox" zippy="checkTypeWork"/>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="form-group">
+                    <input zippy="saveWork" type="submit" value="Сохранить" class="btn btn-outline-primary">
+                </div>
+            </div>
+        </div>
+    </form>
+     <!--<script>-->
+         <!--var test = document.getElementById('testcheck');-->
+         <!--console.log(test);-->
+     <!--</script>-->
+
+</body>
+</html>
