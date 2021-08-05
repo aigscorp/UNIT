@@ -16,7 +16,7 @@ use \Zippy\Html\DataList\DataView;
 use \Zippy\Html\DataList\ArrayDataSource;
 use \Zippy\Html\Label;
 use \Zippy\Html\Link\SubmitLink;
-
+use \Zippy\Html\Form\TextArea;
 
 
 class Pasport extends Base
@@ -62,13 +62,16 @@ class Pasport extends Base
         $this->add(new Form('pasportForm'));
         $this->pasportForm->add(new TextInput('modelName'));
         $this->pasportForm->add(new DataView('list',new ArrayDataSource(new \Zippy\Binding\PropertyBinding($this,"sizes")),$this,'listOnRow'))->Reload();
+        $this->pasportForm->add(new TextArea('editcomment'))->setVisible(false);
 //        $this->pasportForm->add(new DataView('listwork',new ArrayDataSource(new \Zippy\Binding\PropertyBinding($this,"works")),$this,'listOnRowWork'))->Reload();
 
         $this->pasportForm->add(new SubmitLink('addworks'))->onClick($this, 'addWorkOnClick');
 
         $this->add(new Form('listWorkForm'))->setVisible(false);
-        $this->listWorkForm->add(new DataView('listwork',new ArrayDataSource(new \Zippy\Binding\PropertyBinding($this,"works")),$this,'listOnRowWork'))->Reload();
+        $this->listWorkForm->add(new DataView('listwork',
+            new ArrayDataSource(new \Zippy\Binding\PropertyBinding($this,"works")),$this,'listOnRowWork'))->Reload();
         $this->listWorkForm->add(new SubmitLink('saveWork'))->onClick($this, 'saveWorkOnClick');
+        $this->listWorkForm->add(new SubmitLink('cancelWork'))->onClick($this, 'cancelWorkOnClick');
     }
 
     public function listOnRow($row){
@@ -99,34 +102,25 @@ class Pasport extends Base
 
     public function checkOnSelect($sender)
     {
-
-//        echo "<pre>";
-        $d1 = $sender->getOwner();
         $items = $sender->getOwner()->getDataItem();
+//        $this->listWorkForm->saveWork->setAttribute("disabled", true);
 //        if(($items instanceof \Zippy\Html\DataList\DataRow) == true){
 //            var_dump("DATAROW");
 //            echo "DATAROW:" . "<br>";
 //        }
-
-//        $d2 = $d1->getOwner();
-//        $d3 = $d1->getDataItem();
-//        var_dump($d1);
-
-//        echo "=======================================<br>";
         $chk = $sender->isChecked();
-        $id = $sender->id;
+        $id = $items->getID();
         foreach ($this->works as $work){
             if($work->getID() == $id){
                 $work->setSelect($chk);
+//                $this->listWorkForm->saveWork->setAttribute("disabled", false);
                 break;
             }
         }
-//        $items->select = $chk;
-//        $this->test[] = $items;
-//        var_dump($this->test);
     }
     public function addWorkOnClick($sender)
     {
+        $this->pasportForm->editcomment->clean();
         $this->pasportForm->setVisible(false);
         $this->listWorkForm->setVisible(true);
 //        $id = $this->listWorkForm->works; //->getValue();
@@ -135,8 +129,41 @@ class Pasport extends Base
 
     public function saveWorkOnClick($sender)
     {
-        var_dump($sender);
-        var_dump($this->works);
+//        var_dump($sender);
+//        var_dump($this->works);
+        $id = $sender->id;
+        if($id == 'saveWork'){
+            $str_works = "";
+            foreach ($this->works as $work){
+                if($work->getSelect() == true){
+                    $str_works .= $work->work . ", ";
+                }
+            }
+//            $this->pasportForm->editcomment->clean();
+            if(strlen($str_works) != 0){
+                $this->pasportForm->editcomment->setText("$str_works");
+                $this->pasportForm->editcomment->setVisible(true);
+            }
+        }
+
+        foreach ($this->works as $work){
+            $work->resetSelect();
+        }
+
+        $this->listWorkForm->listwork->Reload();
+        $this->pasportForm->setVisible(true);
+        $this->listWorkForm->setVisible(false);
+
+    }
+
+    public function cancelWorkOnClick()
+    {
+        foreach ($this->works as $work){
+            $work->resetSelect();
+        }
+        $this->listWorkForm->listwork->Reload();
+        $this->pasportForm->setVisible(true);
+        $this->listWorkForm->setVisible(false);
     }
 }
 
@@ -171,6 +198,13 @@ class ListWork implements \Zippy\Interfaces\DataItem
     }
 
     public function setSelect($select)
+    {
+        $this->select = $select;
+    }
+
+    public function getSelect() { return $this->select; }
+
+    public function resetSelect($select=false)
     {
         $this->select = $select;
     }
