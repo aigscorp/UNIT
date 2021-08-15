@@ -1,30 +1,109 @@
 <html lang="ru">
 <head>
+    <!--<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css">-->
     <link rel="stylesheet" href="../../assets/css/model.css">
 </head>
 <body>
-    <div class="row">
-        <div class="col-12">
-            <div zippy="panelButton">
-                <a zippy="showProduction" class="btn btn-outline-primary">Заказ на производство</a>
-                <a zippy="showWork" class="btn btn-outline-primary">В работе</a>
-                <a zippy="showStore" class="btn btn-outline-primary">Остатки на складе</a>
-                <a zippy="showCustomer" class="btn btn-outline-primary">Поставщики</a>
-                <a zippy="showDirector" class="btn btn-outline-primary">Директор</a>
+<div class="row">
+    <div class="col-12">
+        <div zippy="panelButton">
+            <a zippy="showProduction" class="btn btn-outline-primary">Заказ на производство</a>
+            <a zippy="showWork" class="btn btn-outline-primary">Контроль производства</a>
+            <a zippy="showStore" class="btn btn-outline-primary">Остатки на складе</a>
+            <a zippy="showCustomer" class="btn btn-outline-primary">Поставщики</a>
+            <a zippy="showDirector" class="btn btn-outline-primary">Директор</a>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-12">
+        <div zippy="detailProduction" class="detailProduction">
+            <div zippy="list">
+                <a zippy="modelName" class="btn btn-outline-secondary model"></a>
+                <a zippy="modelWork" class="btn btn-outline-secondary">В работу</a>
+                <a zippy="modelUpdate" class="btn btn-outline-secondary">Обновить</a>
+                <a zippy="modelCancel" class="btn btn-outline-secondary">Отменить</a>
             </div>
         </div>
     </div>
-    <div class="row">
-        <div class="col-12">
-            <div zippy="detailProduction" class="detailProduction">
-                <div zippy="list">
-                    <a zippy="modelName" class="btn btn-outline-secondary model"></a>
-                    <a zippy="modelWork" class="btn btn-outline-secondary">В работу</a>
-                    <a zippy="modelUpdate" class="btn btn-outline-secondary">Обновить</a>
-                    <a zippy="modelCancel" class="btn btn-outline-secondary">Отменить</a>
-                </div>
+</div>
+<div class="row">
+
+    <form zippy="typeWorkForm">
+        <h3 zippy="model"></h3>
+        <div class="form-group">
+            <div class="btn btn-outline-secondary model" id="newsize">Добавить размеры</div>
+            <div class="form-group">
+                <table class="table table-borderless table-striped">
+                    <tr>
+                        <th>Вид работы</th>
+                        <th>Стоимость</th>
+                        <th>Работник</th>
+                    </tr>
+                    <tr zippy="typeWorkList">
+                        <td><span zippy="typeWork"></span></td>
+                        <td><textarea zippy="price" readonly="readonly"></textarea></td>
+                        <!--<td><a  zippy="edit"><i class="fa fa-edit"></i></a> </td>-->
+                        <td>
+                            <a zippy="employee">Выбрать мастера</a>
+                        </td>
+                    </tr>
+                </table>
+            <!--<div class="form-group">-->
+
+            <!--</div>-->
+            <!--<div class="form-group">-->
+                <!--<label for="sizeModel">Размеры модели</label>-->
+                <!--<select zippy="size" class="form-control">-->
+                    <!--<option value="0">Не выбран</option>-->
+                <!--</select>-->
+
+                <!--<label for="quantity">Количество</label>-->
+                <!--<input zippy="quantity" type="number"/>-->
+            <!--</div>-->
             </div>
         </div>
+        <input zippy="saveSize" type="submit" value="Сохранить_all" class="btn btn-outline-primary">
+    </form>
+
+</div>
+<div class="row">
+    <div class="col-12">
+        <form zippy="panelmaster">
+            <h3 zippy="modelworktype"></h3>
+            <table class="table table-borderless table-striped">
+                <tr>
+                    <th>Работник</th>
+                    <th>Логин</th>
+                    <th>Выбрать</th>
+                </tr>
+                <tr zippy="listmaster">
+                    <td><span zippy="worker"></span></td>
+                    <td><span zippy="login"></span></td>
+                    <td>
+                        <div class="form-check">
+                            <input type="checkbox" zippy="selectworker" class="form-check-input"/>
+                        </div>
+                        <!--<span zippy="selectworker"></span></td>-->
+                      <!--<td><a  zippy="edit"><i class="fa fa-edit"></i></a> </td>-->
+                    <td>
+                        <!--<a zippy="employee">Выбрать мастера</a>-->
+
+                    </td>
+                </tr>
+            </table>
+            <div class="form-group">
+                <input zippy="saveWorker" type="submit" value="Сохранить" class="btn btn-outline-primary">
+                <input zippy="cancelWorker" type="submit" value="Отменить" class="btn btn-outline-primary"/>
+            </div>
+        </form>
     </div>
+</div>
+<script>
+    window.onload = function () {
+
+    }
+</script>
+
 </body>
 </html>

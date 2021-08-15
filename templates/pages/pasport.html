@@ -3,9 +3,10 @@
 
 </head>
 <body>
-     <div class="row">
-         <h2>Паспорт модели</h2>
-     </div>
+
+    <div class="row">
+        <h2>Паспорт модели</h2>
+    </div>
     <form zippy="pasportForm">
 
         <div class="row">
@@ -19,9 +20,9 @@
                     <label for="modelSize">Размеры модели</label>
                     <select class="form-control" zippy="size">
                         <option value="0">Не выбран</option>
-                        <option zippy="list">
-                            <span zippy="modelSize"></span>
-                        </option>
+                        <!--<option zippy="list">-->
+                            <!--<span zippy="modelSize"></span>-->
+                        <!--</option>-->
                     </select>
                 </div>
 
@@ -38,8 +39,8 @@
                     <textarea zippy="editmaterial" class="form-control" readonly="readonly"></textarea>
                 </div>
                 <div class="form-group">
-                    <input zippy="saveModel" type="submit" value="Сохранить" class="btn btn-outline-primary">
-                    <input zippy="cancelModel" type="submit" value="Отменить" class="btn btn-outline-primary"/>
+                    <input zippy="saveModel" type="submit" value="Сохранить1" class="btn btn-outline-primary">
+                    <input zippy="cancelModel" type="submit" value="Отменить1" class="btn btn-outline-primary"/>
                 </div>
             </div>
 
@@ -79,7 +80,7 @@
     </form>
 
 
-     <form zippy="listMaterialForm">
+    <form zippy="listMaterialForm">
          <div class="row">
              <div class="col-8 col-md-6 col-lg-4">
                  <div class="form-group">
@@ -91,7 +92,8 @@
                          </tr>
                          <tr zippy="listmaterial">
                              <td><span zippy="typeMaterial"></span></td>
-                             <td><span zippy="quantity"></span></td>
+                             <!--<td><span zippy="quantity"></span></td>-->
+                             <td><input zippy="quantity" type="number"/></td>
                              <!--<td><a  zippy="edit"><i class="fa fa-edit"></i></a> </td>-->
                              <td>
                                  <div class="form-check">

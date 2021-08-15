@@ -54,7 +54,7 @@ class ItemList extends \App\Pages\Base
         $this->itemtable->add(new ClickLink('addnew'))->onClick($this, 'addOnClick');
 
         $this->itemtable->add(new Form('listform')) ;
-        
+
         $this->itemtable->listform->add(new DataView('itemlist', new ItemDataSource($this), $this, 'itemlistOnRow'));
         $this->itemtable->listform->itemlist->setPageSize(H::getPG());
         $this->itemtable->listform->add(new \Zippy\Html\DataList\Paginator('pag', $this->itemtable->listform->itemlist));

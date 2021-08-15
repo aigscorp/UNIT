@@ -8,8 +8,8 @@
 
 namespace App\Pages;
 
-
-use Zippy\Html\Form\CheckBox;
+use App\Application as App;
+use \Zippy\Html\Form\CheckBox;
 use \Zippy\Html\Form\Form;
 use \Zippy\Html\Form\TextInput;
 use \Zippy\Html\DataList\DataView;
@@ -17,6 +17,7 @@ use \Zippy\Html\DataList\ArrayDataSource;
 use \Zippy\Html\Label;
 use \Zippy\Html\Link\SubmitLink;
 use \Zippy\Html\Form\TextArea;
+use \Zippy\Html\Form\DropDownChoice;
 
 
 class Pasport extends Base
@@ -35,10 +36,11 @@ class Pasport extends Base
         $sql = "select * from items where items.cat_id = " . $cat;
 
         $rs = $conn->Execute($sql);
-//        var_dump($rs);
+
         foreach ($rs as $r){
 //            $this->sizes[] = $r;
-            $this->sizes[] = new ModelSize($r->id, $r['itemname']);
+//            $this->sizes[] = new ModelSize($r->id, $r['itemname']);
+            $this->sizes[] = $r['itemname'];
         }
 
         $cat = 11;
@@ -61,7 +63,10 @@ class Pasport extends Base
 
         $this->add(new Form('pasportForm'));
         $this->pasportForm->add(new TextInput('modelName'));
-        $this->pasportForm->add(new DataView('list',new ArrayDataSource(new \Zippy\Binding\PropertyBinding($this,"sizes")),$this,'listOnRow'))->Reload();
+//        $this->pasportForm->add(new DataView('list',
+//            new ArrayDataSource(new \Zippy\Binding\PropertyBinding($this,"sizes")),$this,'listOnRow'))->Reload();
+        $this->pasportForm->add(new DropDownChoice('size', $this->sizes))->onChange($this, "onSize", true);
+        
         $this->pasportForm->add(new TextArea('editcomment'))->setVisible(false);
         $this->pasportForm->add(new TextArea('editmaterial'))->setVisible(false);
         $this->pasportForm->add(new SubmitLink('saveModel'))->onClick($this, 'saveModelOnClick');
@@ -80,9 +85,18 @@ class Pasport extends Base
         $this->add(new Form('listMaterialForm'))->setVisible(false);
         $this->listMaterialForm->add(new DataView('listmaterial',
             new ArrayDataSource(new \Zippy\Binding\PropertyBinding($this, "materials")),$this, 'listOnRowMaterial'))->Reload();
-
+        $this->listMaterialForm->add(new SubmitLink('saveMaterial'))->onClick($this, 'saveMaterialOnClick');
+        $this->listMaterialForm->add(new SubmitLink('cancelMaterial'))->onClick($this, 'saveMaterialOnClick');
     }
 
+    public function onSize($sender)
+    {
+        $val = $this->pasportForm->size->getValue();
+        $sz = $this->pasportForm->size;
+        $option = $sz->getOptionList();
+        $select = $option[$val];
+        $this->pasportForm->size->setValue($select);
+    }
     public function listOnRow($row){
         $item = $row->getDataItem();
         $row->add(new Label('modelSize',$item->size));
@@ -101,7 +115,8 @@ class Pasport extends Base
         $item = $row->getDataItem();
 
         $row->add(new Label('typeMaterial',$item->material));
-        $row->add(new Label('quantity', $item->quantity));
+//        $row->add(new Label('quantity', $item->quantity));
+        $row->add(new TextInput('quantity'));
         $row->add(new CheckBox('checkTypeMaterial'));
     }
 
@@ -112,26 +127,19 @@ class Pasport extends Base
         $sql = "select * from items where items.cat_id = " . $cat;
 
         $rs = $conn->Execute($sql);
-//        var_dump($rs);
         foreach ($rs as $r){
-//            $this->sizes[] = $r;
             $this->materials[] = new ListMaterial($r['item_id'], $r['itemname'], 0);
         }
-
-//        var_dump($this->materials);
 
         $this->listMaterialForm->listmaterial->Reload();
         $this->pasportForm->setVisible(false);
         $this->listWorkForm->setVisible(false);
         $this->listMaterialForm->setVisible(true);
-
-
     }
 
     public function checkOnSelect($sender)
     {
         $items = $sender->getOwner()->getDataItem();
-//        $this->listWorkForm->saveWork->setAttribute("disabled", true);
         $arr_send = $sender->getOwner()->getChildComponents();
 //        if(($items instanceof \Zippy\Html\DataList\DataRow) == true){
 //            var_dump("DATAROW");
@@ -158,13 +166,107 @@ class Pasport extends Base
         $this->listWorkForm->listwork->Reload();
         $this->pasportForm->setVisible(false);
         $this->listWorkForm->setVisible(true);
-//        $id = $this->listWorkForm->works; //->getValue();
-//        var_dump($id);
+    }
+
+    public function _str($val) { return "'" . $val . "'"; }
+    public function saveModelOnClick($sender)
+    {
+        $id = $sender->id;
+        if($id == "saveModel") {
+            $conn = \ZDB\DB::getConnect();
+            $name_model = $this->pasportForm->modelName->getText();
+            $val = $this->pasportForm->size->getValue();
+//        $sz = $this->pasportForm->size;
+            $option = $this->pasportForm->size->getOptionList();
+            $size = $option[$val];
+//        INSERT INTO `pasport`(`name`, `size`, `comment`) VALUES ("test","30-45","")
+            $sql = "INSERT INTO pasport(name, size) VALUES";  //('model m001', '30-50')"; //({$name_model},{$size})
+            $sql = "INSERT INTO pasport(name, size) VALUES({$this->_str($name_model)}, {$this->_str($size)})";
+//        $sql .= "( " . "'" . $name_model . "', " . "'" . $size . "')";
+            $conn->Execute($sql);
+            $id_ins = $conn->_insertid();
+            print_r($id_ins);
+
+            foreach ($this->works as $work) {
+                if ($work->getSelect() == true) {
+                    $w = $work->getWork();
+                    $detail = "<work>" . $work->getWork() . "</work>";
+                    $sql_w = "INSERT INTO pasport_tax(pasport_id, model_item, detail) 
+                      VALUES({$this->_str($id_ins)}, {$this->_str($w)}, {$this->_str($detail)})";
+                    $conn->Execute($sql_w);
+                }
+            }
+            foreach ($this->materials as $material){
+                if($material->getSelect() == true){
+                    $m = $material->getMaterial();
+                    $q = $material->getQuantity();
+                    $detail = "<material>" . $m . "</material>" . "<quantity>" . $q . "</quantity>";
+                    $sql_m = "INSERT INTO pasport_tax(pasport_id, model_item, detail) 
+                      VALUES ({$this->_str($id_ins)}, {$this->_str($m)}, {$this->_str($detail)})";
+                    $conn->Execute($sql_m);
+                }
+            }
+            $quan = 100;
+            $sql = "INSERT INTO model(pasport_id, quantity) VALUES ({$this->_str($id_ins)}, {$this->_str($quan)})";
+            $conn->Execute($sql);
+
+            var_dump($sql);
+            print_r($sql);
+        }
+        App::Redirect("\\App\\Pages\\Reference\\PasportList");
+
+    }
+
+    public function saveMaterialOnClick($sender)
+    {
+        $id = $sender->id;
+        foreach ($this->materials as $material){
+            $material->resetQuantity();
+        }
+        if($id == 'saveMaterial'){
+//            $this->materials = [];
+            $str_mat = "";
+            $listmaterials = $this->listMaterialForm->listmaterial->getChildComponents();
+
+            foreach ($listmaterials as $listmaterial){
+                $childs = $listmaterial->getChildComponents();
+                $id = $listmaterial->getItemId();
+                foreach ($childs as $k=>$v){
+                    if(str_starts_with($k, "quantity") == true){
+                        $res = $v->getValue();
+                        if($res != "" && $res != "0"){
+                            foreach ($this->materials as $material){
+                                if($material->getID() == $id){
+                                    $material->setQuantity($res);
+                                    $material->setSelect(true);
+                                    $str_mat .= $material->getMaterial() . " (" . $res . ")" . ", ";
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+//            var_dump($str_mat);
+            if(strlen($str_mat) != 0){
+                $this->pasportForm->editmaterial->setText($str_mat);
+                $this->pasportForm->editmaterial->setVisible(true);
+            }
+        }else{
+            $this->pasportForm->editmaterial->setText("");
+            $this->pasportForm->editmaterial->setVisible(false);
+            $this->materials = [];
+        }
+        $this->pasportForm->setVisible(true);
+        $this->listMaterialForm->setVisible(false);
     }
 
     public function saveWorkOnClick($sender)
     {
         $id = $sender->id;
+        foreach ($this->works as $work){
+            $work->resetSelect();
+        }
         if($id == 'saveWork'){
             $str_works = "";
             $listworks = $this->listWorkForm->listwork->getChildComponents();
@@ -193,9 +295,7 @@ class Pasport extends Base
             $this->pasportForm->editcomment->setVisible(false);
         }
 
-        foreach ($this->works as $work){
-            $work->resetSelect();
-        }
+
         $this->pasportForm->setVisible(true);
         $this->listWorkForm->setVisible(false);
     }
@@ -248,6 +348,7 @@ class ListWork implements \Zippy\Interfaces\DataItem
     }
 
     public function getSelect() { return $this->select; }
+    public function getWork() { return $this->work; }
 
     public function resetSelect($select=false)
     {
@@ -271,6 +372,12 @@ class ListMaterial implements \Zippy\Interfaces\DataItem
         $this->select = $select;
     }
 
+    public function getMaterial() { return $this->material; }
+    public function getQuantity(){ return $this->quantity; }
+    public function setQuantity($quantity)
+    {
+        $this->quantity = $quantity;
+    }
     public function setSelect($select)
     {
         $this->select = $select;
@@ -281,6 +388,10 @@ class ListMaterial implements \Zippy\Interfaces\DataItem
     public function resetSelect($select=false)
     {
         $this->select = $select;
+    }
+    public function resetQuantity($quantity=0)
+    {
+        $this->quantity = $quantity;
     }
 
     public function getID() { return $this->id; }
