@@ -27,26 +27,54 @@
         </div>
     </div>
 </div>
+
+<div class="row">
+    <form zippy="sizeQuantityForm">
+        <h3 zippy="sizeAndQuantity"></h3>
+        <div class="form-group">
+            <table class="table table-borderless table-striped">
+                <tr>
+                    <th>Размер</th>
+                    <th>Количество</th>
+                    <th>Выбрано:</th>
+                </tr>
+                <tr zippy="sizeQuantityList">
+                    <td><span zippy="oneSizeModel"></span></td>
+                    <!--<td><a  zippy="edit"><i class="fa fa-edit"></i></a> </td>-->
+                    <td>
+                        <input zippy="quantity" type="number" min="0"/>
+                    </td>
+                    <td><span zippy="inwork"></span></td>
+                </tr>
+            </table>
+        </div>
+        <div class="form-group">
+            <input zippy="saveQuantitySize" type="submit" value="Сохранить_кол" class="btn btn-outline-primary">
+        </div>
+    </form>
+
+</div>
+
 <div class="row">
 
     <form zippy="typeWorkForm">
         <h3 zippy="model"></h3>
+        <div class="btn btn-outline-secondary model" id="newsize" zippy="addSize">Добавить размеры</div>
         <div class="form-group">
-            <div class="btn btn-outline-secondary model" id="newsize">Добавить размеры</div>
             <div class="form-group">
                 <table class="table table-borderless table-striped">
                     <tr>
                         <th>Вид работы</th>
-                        <th>Стоимость</th>
                         <th>Работник</th>
+                        <th>Выбрано:</th>
                     </tr>
                     <tr zippy="typeWorkList">
                         <td><span zippy="typeWork"></span></td>
-                        <td><textarea zippy="price" readonly="readonly"></textarea></td>
                         <!--<td><a  zippy="edit"><i class="fa fa-edit"></i></a> </td>-->
                         <td>
                             <a zippy="employee">Выбрать мастера</a>
                         </td>
+                        <td><span zippy="selected"></span></td>
                     </tr>
                 </table>
             <!--<div class="form-group">-->

@@ -32,16 +32,20 @@ class Production extends Base
     public $workers = [];
     public $ta;
 
+    private $modelID = null;
+    public function getModelID(){ return $this->modelID; }
+    public function setModelID($id){ $this->modelID = $id; }
+
     public function __construct($params = null)
     {
         parent::__construct($params);
 
         $conn = \ZDB\DB::getConnect();
-        $sql = "select p.name as name, p.size as size from model as m, pasport as p where p.id = m.pasport_id";
+        $sql = "select p.id as id, p.name as name, p.size as size from model as m, pasport as p where p.id = m.pasport_id";
 
         $rs = $conn->Execute($sql);
         foreach($rs as $r){
-            $this->items[] = new Model($r->id, $r['name'], $r['size']);
+            $this->items[] = new Model($r['id'], $r['name'], $r['size']);
         }
         $this->add(new Panel('panelButton'))->setVisible(true);
         $this->panelButton->add(new ClickLink('showProduction'));
@@ -62,11 +66,17 @@ class Production extends Base
             $this->employee[] = new Employee($re['item_id'], $re['itemname']);
         }
 
+        $this->add(new Form('sizeQuantityForm'))->setVisible(false);
+        $this->sizeQuantityForm->add(new DataView('sizeQuantityList',
+            new ArrayDataSource(new \Zippy\Binding\PropertyBinding($this, "sizes")), $this, 'listQuantitySizeOnRow'));
+        $this->sizeQuantityForm->add(new SubmitLink('saveQuantitySize'))->onClick($this, 'saveQuantitySizeOnClick');
+        $this->sizeQuantityForm->add(new Label('sizeAndQuantity'));
+
         $this->add(new Form('typeWorkForm'))->setVisible(false);
+        $this->add(new ClickLink('addSize'))->onClick($this, 'addSizeOnClick');
         $this->typeWorkForm->add(new Label('model'));
         $this->typeWorkForm->add(new DataView('typeWorkList',
-            new ArrayDataSource(new \Zippy\Binding\PropertyBinding($this, "employee")), $this, 'listSizeOnRow'))->Reload();
-
+            new ArrayDataSource(new \Zippy\Binding\PropertyBinding($this, "employee")), $this, 'listTypeWorkOnRow'))->Reload();
 
         $this->typeWorkForm->add(new SubmitLink('saveSize'))->onClick($this, 'saveSizeOnClick');
         $this->add(new Form('panelmaster'))->setVisible(false);
@@ -80,6 +90,65 @@ class Production extends Base
 
 //        $this->typeWorkForm->typeWorkList->add(new DropDownChoice('size', $arr))->onChange($this, "onSize", true);
 
+    }
+
+    public function listQuantitySizeOnRow($row)
+    {
+        $item = $row->getDataItem();
+        $row->add(new Label('oneSizeModel', $item->size));
+        $row->add(new TextInput('quantity', $item->quantity));
+    }
+
+    public function saveQuantitySizeOnClick($sender)
+    {
+//        $s = $sender->getOwner()->getChildComponents();
+        $listQuans = $sender->getOwner()->getComponent('sizeQuantityList')->getChildComponents();
+        $crr = [];
+        foreach ($listQuans as $listQuan){
+            $lists = $listQuan->getChildComponents();
+            $sz = 0;
+            $quan = 0;
+            foreach ($lists as $k=>$list){
+                if(str_starts_with($k,"oneSizeModel") == true){
+                    $sz = $list->getText();
+                }else if(str_starts_with($k,"quantity") == true){
+                    $quan = $list->getText();
+                }
+            }
+            $crr[$sz] = $quan;
+
+        }
+        var_dump($crr);
+        $a = 2;
+        $b = $a + 9;
+
+    }
+
+    public function addSizeOnClick($sender)
+    {
+        $model_id = $this->getModelID();
+        $modelName = "";
+        $modelSize = "";
+
+        foreach ($this->items as $item){
+            if($item->getID() == $model_id){
+                $modelName = $item->modelName;
+                $modelSize = $item->size;
+                break;
+            }
+        }
+
+        $this->sizes = [];
+        $arr = explode("-", $modelSize);
+
+        for($i = intval(trim($arr[0])), $k = 1; $i <= intval(trim($arr[1])); $i++, $k++){
+            $this->sizes[] = new SizeQuantity($k, $i);
+        }
+
+        $this->sizeQuantityForm->sizeQuantityList->Reload();
+        $this->sizeQuantityForm->sizeAndQuantity->setText($modelName . ", ввести количество для каждого размера");
+        $this->typeWorkForm->setVisible(false);
+        $this->sizeQuantityForm->setVisible(true);
     }
 
     public function listMasterOnRow($row)
@@ -102,19 +171,14 @@ class Production extends Base
 
     }
 
-    public function listSizeOnRow($row)
+    public function listTypeWorkOnRow($row)
     {
         $item = $row->getDataItem();
 
         $row->add(new ClickLink('employee'))->onClick($this, 'empOnClick');
         $row->add(new Label('typeWork', $item->type));
-        $row->add(new TextArea('price'));
+        $row->add(new Label('selected'));
         //        $row->add(new DropDownChoice('employee', $arr))->onChange($this, "onSize", true);
-    }
-
-    public function onSize($sender)
-    {
-        $this->test[] = $sender->getValue();
     }
 
     public function saveWorkerOnClick($sender)
@@ -131,7 +195,6 @@ class Production extends Base
                 $item = $master->getDataItem();
                 foreach ($childs as $key=>$child){
                     if(str_starts_with($key, "selectworker") == true){
-//                        $val = $childs[$key]->getValue();
                         $val = $child->getValue();
                         $idw = $item->getID();
                         foreach ($this->workers as $worker){
@@ -151,16 +214,12 @@ class Production extends Base
                 $ch = $t->getChildComponents();
                 foreach ($ch as $key=>$c){
                     if($key == $ta){
-                        $c->setValue($emps);
+//                        $c->setValue($emps);
+                        $c->setText($emps);
                         break;
                     }
                 }
-//                $ch[$ta]->setText($emps);
             }
-            $a=10;
-            $b=$a+6;
-//            $this->typeWorkForm->typeWorkList->$ta->setText($emps);
-
         }
         $this->typeWorkForm->setVisible(true);
         $this->panelmaster->setVisible(false);
@@ -169,23 +228,15 @@ class Production extends Base
     {
         $type_work = $sender->getOwner()->getDataItem();
         $model_name = $this->typeWorkForm->model->getText(); //->model->getValue();
+
         $trr = $sender->getOwner()->getChildComponents();
         foreach ($trr as $k=>$t){
-            if(str_starts_with($k, "price") == true){
+            if(str_starts_with($k, "selected") == true){
                 $this->ta = $t->id;
                 break;
             }
-
         }
-//        $this->ta = $this->typeWorkForm->typeWorkList->getChildComponents();
-//        $conn = \ZDB\DB::getConnect();
-//        $emp = "SELECT employee_id, login, emp_name FROM employees";
-//        $rs = $conn->Execute($emp);
-//
-//        $this->workers = [];
-//        foreach ($rs as $r){
-//            $this->workers[] = new Worker($r['employee_id'], $r['emp_name'], $r['login']);
-//        }
+
         $this->panelmaster->modelworktype->setText($model_name . ', ' . $type_work->type);
         $this->panelmaster->listmaster->Reload();
 
@@ -207,6 +258,8 @@ class Production extends Base
     {
         $elems = $sender->getOwner();
         $items = $elems->getDataItem();
+        $this->setModelID($items->getID());
+
 //        $sz = $items->size;
 //        $this->typeWorkForm->typeWorkList->Reload();
 
@@ -214,7 +267,12 @@ class Production extends Base
         $this->typeWorkForm->setVisible(true);
 //        $this->typeWorkForm->typeWorkList->setVisible(true);
 //        $this->typeWorkForm->newsize->setVisible(true);
-        $this->typeWorkForm->model->setText($items->modelName);
+        $this->typeWorkForm->model->setText($items->modelName . ", размеры: " . $items->size);
+        $crr = explode("-", $items->size);
+        for($i = intval($crr[0]), $k = 1; $i <= intval($crr[1]); $i++, $k++){
+            $this->sizes[] = new SizeQuantity($k, $i);
+        }
+//        $this->typeWorkForm->sizeCountList>Reload();
 
         $conn = \ZDB\DB::getConnect();
         $emp = "SELECT employee_id, login, emp_name FROM employees";
@@ -255,6 +313,23 @@ class Worker implements \Zippy\Interfaces\DataItem
     //требование  интерфейса
     public function getID() { return $this->id;}
 }
+
+class SizeQuantity implements \Zippy\Interfaces\DataItem
+{
+    public $id;
+    public $size;
+    public $quantity;
+
+    public function __construct($id, $size, $quantity = 0)
+    {
+        $this->id = $id;
+        $this->size = $size;
+        $this->quantity = $quantity;
+    }
+
+    public function getID() { return $this->id;}
+}
+
 class Employee implements \Zippy\Interfaces\DataItem
 {
     public $id;
