@@ -32,21 +32,31 @@ class Production extends Base
     public $workers = [];
     public $ta;
 
+    private $masterID = null;
     private $modelID = null;
     public function getModelID(){ return $this->modelID; }
     public function setModelID($id){ $this->modelID = $id; }
+    public function getMasterID(){ return $this->masterID; }
+    public function setMasterID($id){ $this->masterID = $id; }
 
     public function __construct($params = null)
     {
         parent::__construct($params);
 
         $conn = \ZDB\DB::getConnect();
-        $sql = "select p.id as id, p.name as name, p.size as size from model as m, pasport as p where p.id = m.pasport_id";
+        $sql = "select p.id as id, p.name as name, p.size as size, m.in_work as in_work from model as m, pasport as p where p.id = m.pasport_id";
 
         $rs = $conn->Execute($sql);
         foreach($rs as $r){
-            $this->items[] = new Model($r['id'], $r['name'], $r['size']);
+            $this->items[] = new Model($r['id'], $r['name'], $r['size'], $r['in_work']);
         }
+
+        $emp = "SELECT employee_id, login, emp_name FROM employees";
+        $rs = $conn->Execute($emp);
+        foreach ($rs as $r){
+            $this->workers[] = new Worker($r['employee_id'], $r['emp_name'], $r['login']);
+        }
+
         $this->add(new Panel('panelButton'))->setVisible(true);
         $this->panelButton->add(new ClickLink('showProduction'));
         $this->panelButton->add(new ClickLink('showWork'));
@@ -60,25 +70,29 @@ class Production extends Base
             new ArrayDataSource(new \Zippy\Binding\PropertyBinding($this,"items")),$this,'listOnRow'))->Reload();
 
 //**********************START typeWorkFORM******************************
-        $sql = "SELECT item_id, itemname FROM items WHERE cat_id = 11";
-        $res = $conn->Execute($sql);
-        foreach ($res as $re){
-            $this->employee[] = new Employee($re['item_id'], $re['itemname']);
-        }
+
+//        $sql = "SELECT item_id, itemname FROM items WHERE cat_id = 11";
+//        $res = $conn->Execute($sql);
+//        foreach ($res as $re){
+//            $this->employee[] = new Employee($re['item_id'], $re['itemname']);
+//        }
 
         $this->add(new Form('sizeQuantityForm'))->setVisible(false);
         $this->sizeQuantityForm->add(new DataView('sizeQuantityList',
             new ArrayDataSource(new \Zippy\Binding\PropertyBinding($this, "sizes")), $this, 'listQuantitySizeOnRow'));
         $this->sizeQuantityForm->add(new SubmitLink('saveQuantitySize'))->onClick($this, 'saveQuantitySizeOnClick');
+        $this->sizeQuantityForm->add(new SubmitLink('cancelQuantitySize'))->onClick($this, 'saveQuantitySizeOnClick');
         $this->sizeQuantityForm->add(new Label('sizeAndQuantity'));
 
         $this->add(new Form('typeWorkForm'))->setVisible(false);
-        $this->add(new ClickLink('addSize'))->onClick($this, 'addSizeOnClick');
+        $this->typeWorkForm->add(new ClickLink('addSize'))->onClick($this, 'addSizeOnClick');
+        $this->typeWorkForm->add(new Label('showSize'));
         $this->typeWorkForm->add(new Label('model'));
         $this->typeWorkForm->add(new DataView('typeWorkList',
             new ArrayDataSource(new \Zippy\Binding\PropertyBinding($this, "employee")), $this, 'listTypeWorkOnRow'))->Reload();
 
         $this->typeWorkForm->add(new SubmitLink('saveSize'))->onClick($this, 'saveSizeOnClick');
+        $this->typeWorkForm->add(new SubmitLink('cancelSize'))->onClick($this, 'saveSizeOnClick');
         $this->add(new Form('panelmaster'))->setVisible(false);
         $this->panelmaster->add(new Label('modelworktype'));
         $this->panelmaster->add(new DataView('listmaster',
@@ -86,9 +100,6 @@ class Production extends Base
         $this->panelmaster->add(new SubmitLink('saveWorker'))->onClick($this, 'saveWorkerOnClick');
         $this->panelmaster->add(new SubmitLink('cancelWorker'))->onClick($this, 'saveWorkerOnClick');
 //**********************END typeWorkFORM******************************
-
-
-//        $this->typeWorkForm->typeWorkList->add(new DropDownChoice('size', $arr))->onChange($this, "onSize", true);
 
     }
 
@@ -102,25 +113,134 @@ class Production extends Base
     public function saveQuantitySizeOnClick($sender)
     {
 //        $s = $sender->getOwner()->getChildComponents();
-        $listQuans = $sender->getOwner()->getComponent('sizeQuantityList')->getChildComponents();
-        $crr = [];
-        foreach ($listQuans as $listQuan){
-            $lists = $listQuan->getChildComponents();
-            $sz = 0;
-            $quan = 0;
-            foreach ($lists as $k=>$list){
-                if(str_starts_with($k,"oneSizeModel") == true){
-                    $sz = $list->getText();
-                }else if(str_starts_with($k,"quantity") == true){
-                    $quan = $list->getText();
+        if($sender->id == "saveQuantitySize"){
+            $listQuans = $sender->getOwner()->getComponent('sizeQuantityList')->getChildComponents();
+            $crr = [];
+            foreach ($listQuans as $listQuan){
+                $lists = $listQuan->getChildComponents();
+                $sz = 0;
+                $quan = 0;
+                foreach ($lists as $k=>$list){
+                    if(str_starts_with($k,"oneSizeModel") == true){
+                        $sz = $list->getText();
+                    }else if(str_starts_with($k,"quantity") == true){
+                        $quan = $list->getText();
+                    }
+                }
+                $crr[$sz] = $quan;
+
+            }
+
+            foreach ($this->workers as $worker){
+                if($worker->getID() == $this->getMasterID()){
+                    $worker->size_qnt = $crr;
+                    break;
                 }
             }
-            $crr[$sz] = $quan;
 
+            $show_sz = "";
+            foreach($crr as $k=>$v){
+                foreach($this->sizes as $sz){
+                    if($k == $sz->size){
+                        $sz->quantity = $v;
+                        if($v != 0){
+                            $show_sz .= $k . " " . "(" . $v . ")" . ", ";
+                        }
+                        break;
+                    }
+                }    
+            }
+
+//            $this->typeWorkForm->showSize->setText($show_sz); показываем выбранные размеры и кол-во.
+
+            $listmasters = $this->panelmaster->listmaster->getChildComponents();
+            foreach ($listmasters as $listmaster){
+                $datamaster = $listmaster->getDataItem();
+                if($datamaster->getID() == $this->getMasterID()){
+                    $listcomps = $listmaster->getChildComponents();
+                    foreach ($listcomps as $key=>$val){
+                        if(str_starts_with($key, "selectwork") == true){
+                           $val->setText($show_sz);
+                        }
+                    }
+                }
+            }
         }
-        var_dump($crr);
-        $a = 2;
-        $b = $a + 9;
+        $this->sizeQuantityForm->setVisible(false);
+        $this->panelmaster->setVisible(true);
+//        $this->typeWorkForm->setVisible(true);
+    }
+
+    public function saveSizeOnClick($sender)
+    {
+        //  save to BD model, master
+        if($sender->id == "saveSize"){
+//            echo "save data type_work table and update table model<br>";
+             $upd = "UPDATE model SET in_work = true WHERE pasport_id = " . $this->getModelID();
+             $conn = \ZDB\DB::getConnect();
+             $conn->Execute($upd);
+            
+            $temp = [];
+            foreach($this->workers as $wrk){
+                foreach($wrk->type as $type){
+                    $temp[] = $type;
+                }
+            }
+            $typeworks = array_unique($temp);
+
+            $masters = [];
+
+            foreach ($typeworks as $typework){
+                //записать в typework виды работ и паспорт модели
+                $sql = "INSERT INTO typework(type_work, pasport_id) VALUES (" . "'" . $typework . "'" . "," .
+                    "'" . $this->getModelID() . "'" . ")";
+                $conn->Execute($sql);
+                $last_id = $conn->_insertid();
+//                echo "<pre>";
+//                print_r($typework);
+//                echo "last inserted record " . $last_id . "<br>";
+//                echo "</pre>";
+
+                foreach ($this->workers as $worker){
+                    if(count($worker->type) != 0){
+                        foreach ($worker->type as $wt){
+                            if($wt == $typework){
+                                $emp_type = new \stdClass();
+                                $emp_type->emp_id = $worker->id;
+                                $emp_type->typework_id = $last_id;
+                                $str_sz_q = "";
+                                if(count($worker->size_qnt) != 0){
+                                    foreach ($worker->size_qnt as $s=>$q){
+                                        $str_sz_q .= "<size>" . $s . "</size>" . "<quantity>" . $q . "</quantity>";
+                                    }
+                                }
+                                $detail_work = "<master>" . $worker->worker . "</master>" . "<work>" . $typework . "</work>" . $str_sz_q;
+                                $emp_type->detail = $detail_work;
+                                $masters[] = $emp_type;
+                            }
+                        }
+                    }
+                }
+
+            }
+            //записать в табл. masters работы, размеры, количество
+            foreach ($masters as $master){
+                $sql = "INSERT INTO masters(typework_id, emp_id, detail) VALUES ("
+                        . "'" . $master->typework_id . "'" . "," . "'" . $master->emp_id . "'"
+                        . "," . "'" . $master->detail . "'" . ")";
+                $conn->Execute($sql);
+
+            }
+
+//            echo "<pre>";
+//            print_r($masters);
+//            print_r($this->workers);
+//            echo "</pre>";
+        }
+        $this->typeWorkForm->setVisible(false);
+        $this->detailProduction->setVisible(true);
+        $a = 1;
+        $b = $a+10;
 
     }
 
@@ -156,19 +276,17 @@ class Production extends Base
         $item = $row->getDataItem();
         $row->add(new Label('worker', $item->worker));
         $row->add(new Label('login', $item->login));
-        $row->add(new CheckBox('selectworker'));//->onChange($this, 'selectworkerOnChange');
+        $row->add(new Label('selectwork'));
+        $row->add(new ClickLink('master'))->onClick($this, 'masterSizeOnClick');
     }
 
-    public function saveSizeOnClick($sender)
+    public function masterSizeOnClick($sender)
     {
-//        var_dump($sender);
-        $d = $sender;
-        $d1 = $this->test;
-        var_dump($this->workers);
+        $master = $sender->getOwner()->getDataItem();
+        $this->setMasterID($master->getID());
 
-        $a = 1;
-        $b = $a+10;
-
+        $this->panelmaster->setVisible(false);
+        $this->addSizeOnClick($sender);
     }
 
     public function listTypeWorkOnRow($row)
@@ -194,15 +312,21 @@ class Production extends Base
                 $childs = $master->getChildComponents();
                 $item = $master->getDataItem();
                 foreach ($childs as $key=>$child){
-                    if(str_starts_with($key, "selectworker") == true){
-                        $val = $child->getValue();
+                    if(str_starts_with($key, "selectwork") == true){
+                        $val = $child->getText();
                         $idw = $item->getID();
                         foreach ($this->workers as $worker){
                             if($idw == $worker->getID() && $val == true){
-                                $worker->type[] = trim($arr_model_work[1]);
-                                $worker->select = $val;
-                                $emps .= $worker->worker . ", ";
-                                break;
+                                $worker->type[] = trim($arr_model_work[2]);
+                                $emps .= $worker->worker . ": ";
+                                $sq = "";
+                                if(count($worker->size_qnt) != 0){
+                                    foreach ($worker->size_qnt as $key=>$val){
+                                        $sq .= $key . "(" . $val . ")" . ", ";
+                                    }
+                                }
+                                if($sq != "") $emps .= $sq;
+                                // break;
                             }
                         }
                     }
@@ -214,7 +338,6 @@ class Production extends Base
                 $ch = $t->getChildComponents();
                 foreach ($ch as $key=>$c){
                     if($key == $ta){
-//                        $c->setValue($emps);
                         $c->setText($emps);
                         break;
                     }
@@ -249,6 +372,12 @@ class Production extends Base
 
         $row->add(new Label('modelName',$item->modelName . ', ' . $item->size));
         $row->add(new ClickLink('modelWork'))->onClick($this, 'modelWorkOnClick');
+        if($item->in_work == true){
+            $row->modelWork->setAttribute('class', 'btn btn-outline-secondary disabled');
+            $row->modelWork->setValue("В работе");
+            $row->modelName->setAttribute('class', 'btn btn-outline-success model');
+        }
+//        $row->modelWork->setAttribute('style', $item->in_work == true ? 'disabled' : null);
         $row->add(new ClickLink('modelUpdate'));
         $row->add(new ClickLink('modelCancel'));
 //    $row->add(new ClickLink('edit'))->onClick($this,'editOnClick');
@@ -260,9 +389,6 @@ class Production extends Base
         $items = $elems->getDataItem();
         $this->setModelID($items->getID());
 
-//        $sz = $items->size;
-//        $this->typeWorkForm->typeWorkList->Reload();
-
         $this->detailProduction->setVisible(false);
         $this->typeWorkForm->setVisible(true);
 //        $this->typeWorkForm->typeWorkList->setVisible(true);
@@ -272,22 +398,31 @@ class Production extends Base
         for($i = intval($crr[0]), $k = 1; $i <= intval($crr[1]); $i++, $k++){
             $this->sizes[] = new SizeQuantity($k, $i);
         }
-//        $this->typeWorkForm->sizeCountList>Reload();
-
         $conn = \ZDB\DB::getConnect();
-        $emp = "SELECT employee_id, login, emp_name FROM employees";
-        $rs = $conn->Execute($emp);
-
-        foreach ($rs as $r){
-            $this->workers[] = new Worker($r['employee_id'], $r['emp_name'], $r['login']);
-        }
-
-//        $conn = \ZDB\DB::getConnect();
-//        $sql = "SELECT user_id, userlogin, email FROM users WHERE role_id != 1";
-//        $rs = $conn->Execute($sql);
+//        $emp = "SELECT employee_id, login, emp_name FROM employees";
+//        $rs = $conn->Execute($emp);
+//
 //        foreach ($rs as $r){
-//            var_dump($r);
+//            $this->workers[] = new Worker($r['employee_id'], $r['emp_name'], $r['login']);
 //        }
+
+        $modelName = $items->modelName;
+        $modelSize = $items->size;
+        $sql = "SELECT pt.id as id, pt.detail as detail FROM `pasport_tax` as pt, `pasport` as p 
+                      WHERE p.id = pt.pasport_id and detail LIKE \"<work>%\" " .
+                      " AND p.name = " . "'" . $modelName . "'" . " AND p.size = " . "'" . $modelSize . "'";
+
+        $res = $conn->Execute($sql);
+        $this->employee = [];
+        foreach ($res as $r){
+            $work = $r['detail'];
+            $wrk = preg_replace('/(<work>)*?(<\/work>)*?/', "", $work);
+            $this->employee[] = new Employee($r['id'], $wrk);
+        }
+        $this->typeWorkForm->typeWorkList->Reload();
+
+//        $test = 100;
+//        $test1 = $test + 5;
     }
 }
 
@@ -300,15 +435,15 @@ class Worker implements \Zippy\Interfaces\DataItem
     public $login;
     public $worker;
     public $type;
-    public $select;
+    public $size_qnt;
 
-    public function __construct($id,$worker,$login,$type = [],$select=false)
+    public function __construct($id,$worker,$login,$type = [],$size_qnt = [])
     {
         $this->id=$id;
         $this->worker=$worker;
         $this->login = $login;
         $this->type = $type;
-        $this->select=$select;
+        $this->size_qnt = $size_qnt;
     }
     //требование  интерфейса
     public function getID() { return $this->id;}
@@ -351,12 +486,14 @@ class Model implements \Zippy\Interfaces\DataItem
     public $id;
     public $modelName;
     public $size;
+    public $in_work;
 
-    public function __construct($id, $modelName, $size)
+    public function __construct($id, $modelName, $size, $in_work=false)
     {
         $this->id = $id;
         $this->modelName = $modelName;
         $this->size = $size;
+        $this->in_work = $in_work;
     }
 
     public function getID()
@@ -364,4 +501,3 @@ class Model implements \Zippy\Interfaces\DataItem
         return $this->id;
     }
 }
-

@@ -18,6 +18,7 @@ use \Zippy\Html\Label;
 use \Zippy\Html\Link\SubmitLink;
 use \Zippy\Html\Form\TextArea;
 use \Zippy\Html\Form\DropDownChoice;
+use Zippy\Html\Panel;
 
 
 class Pasport extends Base
@@ -25,7 +26,7 @@ class Pasport extends Base
     public $sizes = [];
     public $works = [];
     public $materials = [];
-
+    public $razmer = [];
 
     public function __construct($params = null)
     {
@@ -39,7 +40,7 @@ class Pasport extends Base
 
         foreach ($rs as $r){
 //            $this->sizes[] = $r;
-//            $this->sizes[] = new ModelSize($r->id, $r['itemname']);
+//            $this->razmer[] = new ModelSize($r['item_id'], $r['itemname']);
             $this->sizes[] = $r['itemname'];
         }
 
@@ -65,13 +66,17 @@ class Pasport extends Base
         $this->pasportForm->add(new TextInput('modelName'));
 //        $this->pasportForm->add(new DataView('list',
 //            new ArrayDataSource(new \Zippy\Binding\PropertyBinding($this,"sizes")),$this,'listOnRow'))->Reload();
-        $this->pasportForm->add(new DropDownChoice('size', $this->sizes))->onChange($this, "onSize", true);
+        $this->pasportForm->add(new DropDownChoice('size', $this->sizes))->onChange($this, "onSize");
+        $this->pasportForm->add(new Panel('panelNewModelSize'))->setVisible(false);
+        $this->pasportForm->panelNewModelSize->add(new DataView('newSizeModel',
+            new ArrayDataSource(new \Zippy\Binding\PropertyBinding($this,"razmer")),$this,'listSizeModelOnRow'))->Reload();
+//        $this->pasportForm->newSizeModel->setVisible(false);
         
         $this->pasportForm->add(new TextArea('editcomment'))->setVisible(false);
         $this->pasportForm->add(new TextArea('editmaterial'))->setVisible(false);
         $this->pasportForm->add(new SubmitLink('saveModel'))->onClick($this, 'saveModelOnClick');
         $this->pasportForm->add(new SubmitLink('cancelModel'))->onClick($this, 'saveModelOnClick');
-//        $this->pasportForm->add(new DataView('listwork',new ArrayDataSource(new \Zippy\Binding\PropertyBinding($this,"works")),$this,'listOnRowWork'))->Reload();
+//        $this->pasportForm->add(new DataView('listwork',new ArrayDataSource(new \Zipp$this->pasportForm->newSizeModel->setVisible(false);y\Binding\PropertyBinding($this,"works")),$this,'listOnRowWork'))->Reload();
 
         $this->pasportForm->add(new SubmitLink('addworks'))->onClick($this, 'addWorkOnClick');
         $this->pasportForm->add(new SubmitLink('addmaterials'))->onClick($this, 'addMaterialsOnClick');
@@ -91,12 +96,35 @@ class Pasport extends Base
 
     public function onSize($sender)
     {
+//        var_dump($sender);
         $val = $this->pasportForm->size->getValue();
         $sz = $this->pasportForm->size;
         $option = $sz->getOptionList();
         $select = $option[$val];
-        $this->pasportForm->size->setValue($select);
+
+        $arr = explode("-", $select);
+        $this->razmer = [];
+        for($i = intval(trim($arr[0])), $k = 1; $i <= intval(trim($arr[1])); $i++, $k++){
+            $this->razmer[] = new ModelSize($k, $i);
+        }
+
+//        $this->pasportForm->size->setValue($select);
+        $this->pasportForm->panelNewModelSize->setVisible(true);
+        $this->pasportForm->panelNewModelSize->newSizeModel->Reload();
+        $this->pasportForm->size->setValue($val);
+        $this->updateAjax(array('size'));
     }
+    public function listSizeModelOnRow($row)
+    {
+        $item = $row->getDataItem();
+        $text = $this->pasportForm->modelName->getText();
+        if(strlen($text) == 0) $text = "Модель";
+
+        $row->add(new Label('namemodel', $text));
+        $row->add(new Label('sizemodel', $item->size));
+        $row->add(new TextInput('countofsize', $item->quantity));
+    }
+
     public function listOnRow($row){
         $item = $row->getDataItem();
         $row->add(new Label('modelSize',$item->size));
@@ -181,7 +209,29 @@ class Pasport extends Base
             $size = $option[$val];
 //        INSERT INTO `pasport`(`name`, `size`, `comment`) VALUES ("test","30-45","")
             $sql = "INSERT INTO pasport(name, size) VALUES";  //('model m001', '30-50')"; //({$name_model},{$size})
-            $sql = "INSERT INTO pasport(name, size) VALUES({$this->_str($name_model)}, {$this->_str($size)})";
+
+            $comment = [];
+            $model_size = $this->pasportForm->panelNewModelSize->newSizeModel->getChildComponents();
+            foreach ($model_size as $ms){
+                $childs = $ms->getChildComponents();
+                foreach ($childs as $key=>$child){
+                    if(str_starts_with($key, "sizemodel") == true){
+                        $sz = $child->getText();
+                    }else if(str_starts_with($key, "countofsize") == true){
+                        $qnt = $child->getText();
+                    }
+                }
+                $comment[$sz] = $qnt;
+            }
+            $suite = 0;
+            $sizeRange = "";
+            foreach ($comment as $s=>$q){
+                $sizeRange .= "<size>" . $s . "</size>" . "<quantity>" . $q . "</quantity>" . ",";
+                $suite += intval($q);
+            }
+
+            $sql = "INSERT INTO pasport(name, size, comment, quantity) 
+                    VALUES({$this->_str($name_model)}, {$this->_str($size)}, {$this->_str($sizeRange)}, {$this->_str($suite)})";
 //        $sql .= "( " . "'" . $name_model . "', " . "'" . $size . "')";
             $conn->Execute($sql);
             $id_ins = $conn->_insertid();
@@ -206,7 +256,7 @@ class Pasport extends Base
                     $conn->Execute($sql_m);
                 }
             }
-            $quan = 100;
+            $quan = 0;
             $sql = "INSERT INTO model(pasport_id, quantity) VALUES ({$this->_str($id_ins)}, {$this->_str($quan)})";
             $conn->Execute($sql);
 
@@ -317,11 +367,13 @@ class ModelSize implements \Zippy\Interfaces\DataItem
 {
     public $id;
     public $size;
+    public $quantity;
 
-    public function __construct($id, $size)
+    public function __construct($id, $size, $quantity = 0)
     {
         $this->id = $id;
         $this->size = $size;
+        $this->quantity = $quantity;
     }
 
     public function getID() { return $this->id; }

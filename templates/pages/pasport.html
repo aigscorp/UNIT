@@ -10,7 +10,7 @@
     <form zippy="pasportForm">
 
         <div class="row">
-            <div class="col-6 col-md-4 col-lg-3">
+            <div class="col-6">
                 <div class="form-group">
                     <label for="modelName">Наименование модели</label>
                     <input type="text" class="form-control" zippy="modelName" required="required">
@@ -24,6 +24,22 @@
                             <!--<span zippy="modelSize"></span>-->
                         <!--</option>-->
                     </select>
+                    <div zippy="panelNewModelSize">
+                        <table class="table table-borderless table-striped">
+                            <tr>
+                                <th>Модель</th>
+                                <th>Размер</th>
+                                <th>Количество</th>
+                            </tr>
+                            <tr zippy="newSizeModel">
+                                <td><span zippy="namemodel"></span></td>
+                                <td>
+                                    <span zippy="sizemodel"></span>
+                                </td>
+                                <td><input type="number" min="0" zippy="countofsize"/></td>
+                            </tr>
+                        </table>
+                    </div>
                 </div>
 
                 <div class="form-group">

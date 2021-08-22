@@ -18,7 +18,7 @@
 <div class="row">
     <div class="col-12">
         <div zippy="detailProduction" class="detailProduction">
-            <div zippy="list">
+            <div zippy="list" style="margin: 5px 0;">
                 <a zippy="modelName" class="btn btn-outline-secondary model"></a>
                 <a zippy="modelWork" class="btn btn-outline-secondary">В работу</a>
                 <a zippy="modelUpdate" class="btn btn-outline-secondary">Обновить</a>
@@ -50,6 +50,7 @@
         </div>
         <div class="form-group">
             <input zippy="saveQuantitySize" type="submit" value="Сохранить_кол" class="btn btn-outline-primary">
+            <input zippy="cancelQuantitySize" type="submit" value="Отменить_кол" class="btn btn-outline-primary">
         </div>
     </form>
 
@@ -59,14 +60,15 @@
 
     <form zippy="typeWorkForm">
         <h3 zippy="model"></h3>
-        <div class="btn btn-outline-secondary model" id="newsize" zippy="addSize">Добавить размеры</div>
+        <div class="btn btn-outline-secondary model" id="newsize" zippy="addSize" style="display: none">Добавить размеры</div>
+        <span zippy="showSize" style="display:block; width: 50%; font-weight: 600;"></span>
         <div class="form-group">
             <div class="form-group">
                 <table class="table table-borderless table-striped">
                     <tr>
                         <th>Вид работы</th>
                         <th>Работник</th>
-                        <th>Выбрано:</th>
+                        <th>Выбрано: размеры и количество</th>
                     </tr>
                     <tr zippy="typeWorkList">
                         <td><span zippy="typeWork"></span></td>
@@ -77,21 +79,13 @@
                         <td><span zippy="selected"></span></td>
                     </tr>
                 </table>
-            <!--<div class="form-group">-->
-
-            <!--</div>-->
-            <!--<div class="form-group">-->
-                <!--<label for="sizeModel">Размеры модели</label>-->
-                <!--<select zippy="size" class="form-control">-->
-                    <!--<option value="0">Не выбран</option>-->
-                <!--</select>-->
-
-                <!--<label for="quantity">Количество</label>-->
-                <!--<input zippy="quantity" type="number"/>-->
-            <!--</div>-->
             </div>
         </div>
-        <input zippy="saveSize" type="submit" value="Сохранить_all" class="btn btn-outline-primary">
+        <div class="form-group">
+            <input zippy="saveSize" type="submit" value="В производство" class="btn btn-outline-primary">
+            <input zippy="cancelSize" type="submit" value="Отменить" class="btn btn-outline-primary">
+        </div>
+        
     </form>
 
 </div>
@@ -103,20 +97,24 @@
                 <tr>
                     <th>Работник</th>
                     <th>Логин</th>
-                    <th>Выбрать</th>
+                    <th>Размеры</th>
+                    <th>Выбрано: размеры и количество</th>
                 </tr>
                 <tr zippy="listmaster">
                     <td><span zippy="worker"></span></td>
                     <td><span zippy="login"></span></td>
                     <td>
-                        <div class="form-check">
-                            <input type="checkbox" zippy="selectworker" class="form-check-input"/>
-                        </div>
-                        <!--<span zippy="selectworker"></span></td>-->
-                      <!--<td><a  zippy="edit"><i class="fa fa-edit"></i></a> </td>-->
+                        <a zippy="master">Добавить размеры</a>
+                    </td>
                     <td>
-                        <!--<a zippy="employee">Выбрать мастера</a>-->
+                        <!--<i class="fa fa-comment"></i>-->
+                        <div>
+                            <!--<img src="https://img.icons8.com/fluency/48/000000/separate-every-n-sheets.png"/>-->
+                            <img src="https://img.icons8.com/ios-glyphs/30/000000/mens-shoe.png"/>&nbsp;
+                            <span zippy="selectwork">
 
+                            </span>
+                        </div>
                     </td>
                 </tr>
             </table>
