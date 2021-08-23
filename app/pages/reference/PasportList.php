@@ -55,9 +55,17 @@ class PasportList extends \App\Pages\Base
         $item = $row->getDataItem();
         $row->add(new Label('itemname', $item->name));
         $row->add(new Label('itemsize', $item->size));
+        $row->add(new ClickLink('edit'))->onClick($this, 'editModelOnClick');
     }
 
-    public function addNewOnClick($sender)
+    public function editModelOnClick($sender)
+    {
+//        var_dump($sender);
+
+
+    }
+
+    public function addNewOnClick()
     {
         App::Redirect("\\App\\Pages\\Pasport");
     }

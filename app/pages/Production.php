@@ -8,7 +8,7 @@
 
 namespace App\Pages;
 
-
+use App\Application as App;
 use Zippy\Html\Form\Button;
 use Zippy\Html\Form\CheckBox;
 use Zippy\Html\Form\Form;
@@ -57,12 +57,14 @@ class Production extends Base
             $this->workers[] = new Worker($r['employee_id'], $r['emp_name'], $r['login']);
         }
 
-        $this->add(new Panel('panelButton'))->setVisible(true);
-        $this->panelButton->add(new ClickLink('showProduction'));
-        $this->panelButton->add(new ClickLink('showWork'));
-        $this->panelButton->add(new ClickLink('showStore'));
-        $this->panelButton->add(new ClickLink('showCustomer'));
-        $this->panelButton->add(new ClickLink('showDirector'));
+        $this->add(new \App\Widgets\MenuProduction('widgetMenu', $this, ''))->setVisible(true);
+//        $this->add(new Panel('panelButton'))->setVisible(true);
+//        $this->panelButton->add(new ClickLink('showProduction'));
+//        $this->panelButton->add(new ClickLink('showWork'));
+//        $this->panelButton->add(new ClickLink('showStore'));
+//        $this->panelButton->add(new ClickLink('showCustomer'));
+//        $this->panelButton->add(new ClickLink('showDirector'));
+
 
         $this->add(new Panel('detailProduction'))->setVisible(true);
 //        $this->detailProduction->setVisible(false);
@@ -231,11 +233,12 @@ class Production extends Base
                 $conn->Execute($sql);
 
             }
-
+            App::Redirect("\\App\\Pages\\Production");
 //            echo "<pre>";
 //            print_r($masters);
 //            print_r($this->workers);
 //            echo "</pre>";
+
         }
         $this->typeWorkForm->setVisible(false);
         $this->detailProduction->setVisible(true);
@@ -420,9 +423,6 @@ class Production extends Base
             $this->employee[] = new Employee($r['id'], $wrk);
         }
         $this->typeWorkForm->typeWorkList->Reload();
-
-//        $test = 100;
-//        $test1 = $test + 5;
     }
 }
 

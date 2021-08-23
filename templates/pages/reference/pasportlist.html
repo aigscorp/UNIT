@@ -43,6 +43,12 @@
                 <tr zippy="itemlist">
                     <td zippy="itemname"></td>
                     <td zippy="itemsize"></td>
+                    <td></td>
+                    <td></td>
+                    <td aling="center">
+                        <a zippy="copy" title="Копировать"><i class="fa fa-copy"></i></a> &nbsp;&nbsp;&nbsp;
+                        <a zippy="edit" title="Редактировать"><i class="fa fa-edit"></i></a> &nbsp;
+                    </td>
                 </tr>
                 <!--<tr zippy="itemlist">-->
                     <!--<td><input  zippy="seldel" class="seldel" type="checkbox"></td>-->
@@ -100,5 +106,59 @@
         </form>
         </div>
     </div>
+<div class="row">
+    <form zippy="editModelForm">
+        <h3>Редактирование</h3>
+        <div class="form-group">
+            <label for="modelName">Наименование модели</label>
+            <input type="text" class="form-control" zippy="modelName" required="required">
+        </div>
+        <div class="form-group">
+            <label for="modelSize">Размеры модели</label>
+            <select class="form-control" zippy="size">
+                <option value="0">Не выбран</option>
+                <!--<option zippy="list">-->
+                <!--<span zippy="modelSize"></span>-->
+                <!--</option>-->
+            </select>
+            <div zippy="panelNewModelSize">
+                <table class="table table-borderless table-striped">
+                    <tr>
+                        <th>Модель</th>
+                        <th>Размер</th>
+                        <th>Количество</th>
+                    </tr>
+                    <tr zippy="newSizeModel">
+                        <td><span zippy="namemodel"></span></td>
+                        <td>
+                            <span zippy="sizemodel"></span>
+                        </td>
+                        <td><input type="number" min="0" zippy="countofsize"/></td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="form-group">
+                <a zippy="addworks">Добавить список работ</a>
+            </div>
+            <div class="form-group">
+                <textarea zippy="editcomment" class="form-control" readonly="readonly"></textarea>
+            </div>
+            <div class="form-group">
+                <a zippy="addmaterials">Добавить комплектующие для модели</a>
+            </div>
+            <div class="form-group">
+                <textarea zippy="editmaterial" class="form-control" readonly="readonly"></textarea>
+            </div>
+            <div class="form-group">
+                <input zippy="saveModel" type="submit" value="Сохранить1" class="btn btn-outline-primary">
+                <input zippy="cancelModel" type="submit" value="Отменить1" class="btn btn-outline-primary"/>
+            </div>
+
+        </div>
+    </form>
+
+</div>
+
 </body>
 </html>
