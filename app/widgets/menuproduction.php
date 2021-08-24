@@ -8,7 +8,7 @@
 
 namespace App\Widgets;
 
-
+use App\Application as App;
 use Zippy\Html\Form\Form;
 use \Zippy\Html\Link\ClickLink;
 
@@ -24,7 +24,7 @@ class MenuProduction extends \Zippy\Html\PageFragment
         $this->_event = $event;
 
         $this->add(new Form('panelButton'));
-        $this->panelButton->add(new ClickLink('showProduction'));
+        $this->panelButton->add(new ClickLink('showProduction'))->onClick($this, 'showProductionOnClick');
         $this->panelButton->add(new ClickLink('showWork'))->onClick($this, 'showWorkOnClick');
         $this->panelButton->add(new ClickLink('showStore'));
         $this->panelButton->add(new ClickLink('showCustomer'));
@@ -33,7 +33,10 @@ class MenuProduction extends \Zippy\Html\PageFragment
 
     public function showWorkOnClick()
     {
-
+        App::Redirect("\\App\\Pages\\ControlProd");
     }
-
+    public function showProductionOnClick()
+    {
+        App::Redirect("\\App\\Pages\\Production");
+    }
 }

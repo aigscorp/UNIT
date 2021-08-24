@@ -1,0 +1,39 @@
+<html lang="ru">
+<head>
+
+</head>
+<body>
+    <div class="row">
+        <div zippy="widgetMenu"></div>
+    </div>
+    <div class="row">
+        <div class="col-8">
+            <form zippy="totalWorkForm">
+                <p>общее количество работ</p>
+                <a zippy="clock">clock</a>
+                <div class="form-group">
+                    <table class="table table-borderless table-striped">
+                        <tr>
+                            <th>Вид работы</th>
+                            <th>Работник</th>
+                            <th>Выбрано: размеры и количество</th>
+                        </tr>
+                        <tr zippy="typeWorkList">
+                            <td><span zippy="typeWork"></span></td>
+                            <!--<td><a  zippy="edit"><i class="fa fa-edit"></i></a> </td>-->
+                            <td>
+                                <a zippy="employee">Выбрать мастера</a>
+                            </td>
+                            <td><span zippy="selected"></span></td>
+                        </tr>
+                    </table>
+                </div>
+            </form>
+        </div>
+
+        <div class="col-4">
+            <div zippy="testComponent"></div>
+        </div>
+    </div>
+</body>
+</html>

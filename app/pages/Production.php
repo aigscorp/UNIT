@@ -23,7 +23,7 @@ use \Zippy\Html\Form\DropDownChoice;
 use \Zippy\Html\Link\SubmitLink;
 
 
-class Production extends Base
+class Production extends \App\Pages\Base
 {
     public $items = array();
     public $sizes = [];
