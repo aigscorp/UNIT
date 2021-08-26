@@ -183,7 +183,7 @@ class Pasport extends Base
             }
         }
         $compon = $this->getComponent('listWorkForm');
-        $arr_comp = $compon->getChildComponents();
+//        $arr_comp = $compon->getChildComponents();
 
 //        $this->listWorkForm->listWork->checkTypeWork->getValue();
         $this->updateAjax(array('checkTypeWork'));
