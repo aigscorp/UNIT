@@ -7,36 +7,45 @@
         <div zippy="widgetMenu"></div>
     </div>
     <div class="row">
-        <div class="col-8">
+        <div class="col-9">
             <form zippy="totalWorkForm">
-                <p>общее количество работ</p>
+                <p class="h6">Общее количество работ</p>
                 <a zippy="prev" class="btn btn-primary">Пред</a>
                 <a zippy="next" class="btn btn-primary">След</a>
 
                 <div class="form-group">
-                    <div zippy="testComponent"></div>
-                    <!--<table class="table table-borderless table-striped">-->
-                        <!--<tr>-->
-                            <!--<th>Вид работы</th>-->
-                            <!--<th>Работник</th>-->
-                            <!--<th>Выбрано: размеры и количество</th>-->
-                        <!--</tr>-->
-                        <!--<tr zippy="typeWorkList">-->
-                            <!--<td><span zippy="typeWork"></span></td>-->
-                            <!--&lt;!&ndash;<td><a  zippy="edit"><i class="fa fa-edit"></i></a> </td>&ndash;&gt;-->
-                            <!--<td>-->
-                                <!--<a zippy="employee">Выбрать мастера</a>-->
-                            <!--</td>-->
-                            <!--<td><span zippy="selected"></span></td>-->
-                        <!--</tr>-->
-                    <!--</table>-->
+                    <div zippy="tableModelComponent"></div>
+                </div>
+                <p class="h6">Список сотрудников в работе данной модели</p>
+                <div class="form-group">
+                    <div zippy="tableMasterComponent"></div>
                 </div>
             </form>
         </div>
 
-        <!--<div class="col-4">-->
-            <!--<div zippy="testComponent"></div>-->
-        <!--</div>-->
+        <div class="col-3">
+            <div class="card">
+                <div class="card-header">
+                    Монитор происшествий
+                </div>
+                <div class="card-body" style="height: 200px; overflow-y: scroll;">
+                    <p class="card-text">
+                        С вспомогательным текстом ниже в качестве естественного перехода к дополнительному контенту.
+                    </p>
+                    <!--<p class="card-text">-->
+                        <!--С вспомогательным текстом ниже в качестве естественного перехода к дополнительному контенту.-->
+                        <!--Lorem ipsum dolor sit amet, consectetur adipisicing elit. Ab at beatae, cum, earum facere id ipsa itaque-->
+                        <!--laboriosam minus modi nam necessitatibus quam rem similique, tempore ullam veniam. Ea, est?-->
+                    <!--</p>-->
+                </div>
+            </div>
+            <div class="row my-2">
+                <button class="btn btn-primary">Производство данной модели выполнено</button>
+            </div>
+            <div class="row">
+                <button class="btn btn-primary">Завершить производство</button>
+            </div>
+        </div>
     </div>
 </body>
 </html>

@@ -38,21 +38,6 @@ class ComponentProd extends \Zippy\Html\CustomComponent implements \Zippy\Interf
 
     }
 
-    public function testContent($param)
-    {
-//        return "<p>hello</p>";
-//        $this->str = "<div>abc</div>";
-//        var_dump($param);
-//        $this->data = "hello world";
-//        return $this->getContent($this->str);
-//        $arr = $param->elems;
-//        $row = count($arr);
-//        $col = count($arr[0]);
-//        $this->value = $arr;
-//        $this->str = $this->createTable($row, $col, $arr);
-//        $this->getContent($param);
-    }
-
     public function setValue($value)
     {
         $this->value = $value;
@@ -60,12 +45,18 @@ class ComponentProd extends \Zippy\Html\CustomComponent implements \Zippy\Interf
 
     public function createTable($row, $col, $arr)
     {
-        $tpl = "<table class='table table-borderless table-striped' style='margin: 10px 0;'>";
+        //table-borderless
+        $tpl = "<table class='table table-striped table-sm table-bordered' style='margin: 10px 0;'>";
         for ($i = 0; $i < $row; $i++){
             $tpl .= "<tr>";
             for($j = 0; $j < $col; $j++){
                 if($i == 0){
-                    $tpl .= "<th>" . $arr[$i][$j] . "</th>";
+                    if($j == 0){
+                        $tpl .= "<th style='width: 180px;'>" . $arr[$i][$j] . "</th>";
+                    }else{
+                        $tpl .= "<th>" . $arr[$i][$j] . "</th>";
+                    }
+
                 }else{
                     $tpl .= "<td>" . $arr[$i][$j] . "</td>";
                 }
