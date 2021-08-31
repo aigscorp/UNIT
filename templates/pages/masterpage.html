@@ -33,18 +33,13 @@
     <div class="row">
         <div class="col-8">
             <form zippy="tableWorkForm">
-                <!--<div class="btn btn-outline-info">-->
-                <!--<i class="fa fa-bars" aria-hidden="true">-->
-                    <!--<a zippy="showTypeWork" style="margin: 0 0 0 20px;"></a>-->
-                <!--</i>-->
-                <!--</div>-->
-                <!--<div zippy="modelNameSize" class="h3" style="margin: 10px 0;"></div>-->
                 <table class="table table-striped table-sm">
                     <tr>
                         <th scope="col">Размерный ряд</th>
                         <th scope="col">Количество выполненных</th>
                         <th scope="col">Количество всего работ</th>
                         <th scope="col">Количество остаток</th>
+                        <th scope="col"></th>
                     </tr>
                     <tr zippy="listWorkModelMaster">
                         <td><span zippy="itemSizeModel"></span></td>
@@ -53,15 +48,19 @@
                         </td>
                         <td><span zippy="itemTotalModel"></span></td>
                         <td><span zippy="itemRemainModel"></span></td>
+                        <td><a zippy="itemEditDefect">
+                            <img src="../../assets/images/defect2.png" alt="брак" title="брак">
+                        </a></td>
                     </tr>
                 </table>
                 <div class="form-group">
                     <input zippy="saveSizeCount" type="submit" value="Подтвердить" class="btn btn-outline-primary">
-                    <input zippy="editDefectModel" type="submit" value="Брак" class="btn btn-outline-primary"/>
-                </div>
-                <div class="form-group">
                     <input zippy="saveFinishModel" type="submit" value="Закончить выполнение модели" class="btn btn-outline-primary">
+                    <!--<input zippy="editDefectModel" type="submit" value="Брак" class="btn btn-outline-primary"/>-->
                 </div>
+                <!--<div class="form-group">-->
+                    <!--<input zippy="saveFinishModel" type="submit" value="Закончить выполнение модели" class="btn btn-outline-primary">-->
+                <!--</div>-->
             </form>
         </div>
     </div>
@@ -77,12 +76,7 @@
                         <th scope="col"></th>
                     </tr>
                     <tr zippy="listDefectModel">
-                        <!--<td><span zippy="defectSize"></span></td>-->
-                        <td>
-                            <select zippy="defectSize" class="form-control">
-                                <option value="1">Не выбран</option>
-                            </select>
-                        </td>
+                        <td><span zippy="defectSize"></span></td>
                         <td><span zippy="defectDescribe"></span></td>
                         <td>
                             <input type="checkbox" zippy="defectSelect" class="form-check-input"/>
@@ -90,15 +84,33 @@
                     </tr>
                 </table>
                 <div class="form-group">
-                    <textarea zippy="defectInfo" rows="5" style="width: 100%;"></textarea>
+                    <textarea zippy="defectInfo" rows="5" style="width: 100%;" placeholder="Дополнительная информация"></textarea>
                 </div>
-
                 <div class="form-group">
                     <input zippy="saveDefectModel" type="submit" value="Подтвердить" class="btn btn-outline-primary">
                 </div>
             </form>
         </div>
     </div>
-
+    <div class="row">
+        <div class="col-6">
+            <form zippy="finishModelForm">
+                <table class="table table-striped table-sm">
+                    <tr>
+                        <th scope="col">Размерный ряд</th>
+                        <th scope="col">Подтверждение выполнения модели</th>
+                    </tr>
+                    <tr>
+                        <td><span zippy="itemSizeRange"></span></td>
+                        <td><span zippy="itemConfirm"></span></td>
+                    </tr>
+                </table>
+                <div class="form-group">
+                    <input zippy="saveConfirmModel" type="submit" value="Подтвердить" class="btn btn-outline-primary">
+                    <input zippy="cancelConfirmModel" type="submit" value="Отменить" class="btn btn-outline-primary">
+                </div>
+            </form>
+        </div>
+    </div>
 </body>
 </html>

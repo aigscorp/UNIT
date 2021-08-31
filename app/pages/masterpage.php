@@ -86,18 +86,24 @@ class MasterPage extends \App\Pages\Base
         $this->add(new Label('modelNameSize'));
 
         $this->add(new Form('tableWorkForm'))->setVisible(false);
-        $this->tableWorkForm->add(new SubmitLink('editDefectModel'))->onClick($this, 'editDefectModelOnClick');
-//        $this->tableWorkForm->add(new Label('modelNameSize'));
-//        $this->tableWorkForm->add(new Label('showTypeWork'));
+//        $this->tableWorkForm->add(new SubmitLink('editDefectModel'))->onClick($this, 'editDefectModelOnClick');
+
         $this->tableWorkForm->add(new DataView('listWorkModelMaster',
             new ArrayDataSource(new \Zippy\Binding\PropertyBinding($this, "list_size")), $this, 'listWorkModelMasterOnRow'));
+        $this->tableWorkForm->add(new ClickLink('saveSizeCount'))->onClick($this, 'saveSizeCountOnClick');
+        $this->tableWorkForm->add(new ClickLink('saveFinishModel'))->onClick($this, 'saveFinishModelOnClick');
 
         $this->add(new Form('defectForm'))->setVisible(false);
         $this->defectForm->add(new DataView('listDefectModel',
             new ArrayDataSource(new \Zippy\Binding\PropertyBinding($this, "list_defect")), $this, 'listDefectModelOnRow'));
         $this->defectForm->add(new TextArea('defectInfo'));
-        $a = 1;
-        $b = $a + 9;
+        $this->defectForm->add(new ClickLink('saveDefectModel'))->onClick($this, 'saveDefectModelOnClick');
+
+        $this->add(new Form('finishModelForm'))->setVisible(false);
+        $this->finishModelForm->add(new Label('itemSizeRange'));
+        $this->finishModelForm->add(new Label('itemConfirm'));
+        $this->finishModelForm->add(new ClickLink('saveConfirmModel'))->onClick($this, 'saveConfirmModelOnClick');
+        $this->finishModelForm->add(new ClickLink('cancelConfirmModel'))->onClick($this, 'saveConfirmModelOnClick');
     }
 
     public function workTypeMasterOnChange()
@@ -116,7 +122,6 @@ class MasterPage extends \App\Pages\Base
                 }
             }
         }
-//        var_dump($select);
         $this->panelModelMaster->listWorkMaster->Reload();
         $this->masterForm->workTypeMaster->setValue($val);
 
@@ -124,6 +129,7 @@ class MasterPage extends \App\Pages\Base
         $this->panelModelMaster->setVisible(true);
         $this->defectForm->setVisible(false);
         $this->modelNameSize->setVisible(false);
+        $this->finishModelForm->setVisible(false);
 
         $this->updateAjax(array('workTypeMaster'));
     }
@@ -180,6 +186,7 @@ class MasterPage extends \App\Pages\Base
         $row->itemCountModel->setText($item->total_quantity - $item->master_quantity);
         $row->add(new Label('itemTotalModel', $item->total_quantity));
         $row->add(new Label('itemRemainModel'));
+        $row->add(new ClickLink('itemEditDefect'))->onClick($this, 'itemEditDefectOnClick');
     }
 
     public function editDefectModelOnClick($sender)
@@ -204,21 +211,64 @@ class MasterPage extends \App\Pages\Base
 
     }
 
+    public function saveDefectModelOnClick($sender)
+    {
+        $send = $sender;
+        if($sender->id == "saveDefectModel"){
+            $listDefectModel = $this->listDefectModel->getChildComponents();
+
+        }
+    }
+
+    public function itemEditDefectOnClick($sender)
+    {
+//        $send = $sender;
+        $item = $sender->getOwner()->getDataItem();
+        $sz_defect = $item->size;
+        $this->list_defect = [];
+        $defects = ["Брак на коже", "Моя вина", "Клей", "Другое, вызвать Администратора"];
+
+        foreach ($defects as $key=>$defect){
+            $this->list_defect[] = new WorksSize($key + 1, $sz_defect, "", "", $defect);
+        }
+        $this->defectForm->listDefectModel->Reload();
+        $this->tableWorkForm->setVisible(false);
+        $this->defectForm->setVisible(true);
+    }
+
     public function listDefectModelOnRow($row)
     {
         $item = $row->getDataItem();
         if($item->id == 1){
-//            $row->add(new Label('defectSize', $item->size));
-            $row->add(new DropDownChoice('defectSize', [40,41,42,43]/*$item->size*/));
+            $row->add(new Label('defectSize', $item->size));
         }
-//        else{
-//            $row->defectSize->addOption($item->id, $item->size);
-//        }
-
         $row->add(new Label('defectDescribe', $item->defect));
         $row->add(new CheckBox('defectSelect'));
     }
 
+    public function saveFinishModelOnClick($sender)
+    {
+        $text = $this->modelNameSize->getText();
+        $sizeRange = explode(",", $text);
+        $tmp = $this->masterForm->workTypeMaster;//->getValue();
+        $value = $tmp->getValue();
+        $typeWorks = $tmp->getOptionList();
+        $typeWork = $typeWorks[intval($value)];
+
+        $this->finishModelForm->itemSizeRange->setText($sizeRange[1]);
+        $this->finishModelForm->itemConfirm->setText($typeWork . " по данной модели выполнена");
+        $this->tableWorkForm->setVisible(false);
+        $this->finishModelForm->setVisible(true);
+    }
+
+    public function saveConfirmModelOnClick($sender)
+    {
+        if($sender->id == 'saveConfirmModel'){
+
+        }
+        $this->finishModelForm->setVisible(false);
+        $this->tableWorkForm->setVisible(true);
+    }
 }
 
 class WorksMaster implements \Zippy\Interfaces\DataItem
