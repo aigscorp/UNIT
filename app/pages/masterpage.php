@@ -23,8 +23,9 @@ use Zippy\Html\Panel;
 
 class MasterPage extends \App\Pages\Base
 {
-    public $id;
-    public $emp;
+    public $pasport_id;
+    public $employee_name;
+    public $current_work;
     public $listWorkEmployees = [];
     public $list_model = [];
     public $list_size = [];
@@ -34,14 +35,7 @@ class MasterPage extends \App\Pages\Base
     public function __construct($params = null)
     {
         parent::__construct($params);
-//        echo "<pre>";
-//        $sess = $_SESSION;
-//        foreach ($sess as $ses){
-//            if(is_object($ses) == false){
-//                echo $ses;
-//            }
-//        }
-//        echo "</pre>";
+
         $userlogin = $_SESSION['userlogin'];
 
         $conn = \ZDB\DB::getConnect();
@@ -51,7 +45,8 @@ class MasterPage extends \App\Pages\Base
 
         $emp_id = $rs->fields['employee_id'];
         $emp_name = $rs->fields['emp_name'];
-
+        $this->employee_name = $emp_name;
+        
         $query = "SELECT CONCAT(p.name, ', ', p.size) as name, p.comment, t.pasport_id, t.type_work, m.typework_id, m.detail 
                   FROM masters m, typework t, model md, pasport p 
                   WHERE m.emp_id = " . $emp_id. " AND t.id = m.typework_id 
@@ -97,7 +92,7 @@ class MasterPage extends \App\Pages\Base
         $this->defectForm->add(new DataView('listDefectModel',
             new ArrayDataSource(new \Zippy\Binding\PropertyBinding($this, "list_defect")), $this, 'listDefectModelOnRow'));
         $this->defectForm->add(new TextArea('defectInfo'));
-        $this->defectForm->add(new ClickLink('saveDefectModel'))->onClick($this, 'saveDefectModelOnClick');
+        $this->defectForm->add(new SubmitLink('saveDefectModel'))->onClick($this, 'saveDefectModelOnClick');
 
         $this->add(new Form('finishModelForm'))->setVisible(false);
         $this->finishModelForm->add(new Label('itemSizeRange'));
@@ -106,8 +101,7 @@ class MasterPage extends \App\Pages\Base
         $this->finishModelForm->add(new ClickLink('cancelConfirmModel'))->onClick($this, 'saveConfirmModelOnClick');
     }
 
-    public function workTypeMasterOnChange()
-    {
+    public function workTypeMasterOnChange(){
         $val = $this->masterForm->workTypeMaster->getValue();
         $works = $this->masterForm->workTypeMaster;
         $option = $works->getOptionList();
@@ -134,23 +128,22 @@ class MasterPage extends \App\Pages\Base
         $this->updateAjax(array('workTypeMaster'));
     }
 
-    public function listWorkMasterOnRow($row)
-    {
+    public function listWorkMasterOnRow($row){
         $item = $row->getDataItem();
         $row->add(new ClickLink('modelName'))->onClick($this, 'modelNameOnClick');
         $row->modelName->setValue($item->model);
     }
 
-    public function modelNameOnClick($sender)
-    {
-//        print_r($sender->id);
+    public function modelNameOnClick($sender){
         $owner = $sender->getOwner();
         $item = $owner->getDataItem();
-        $type = $this->masterForm->workTypeMaster->getvalue();
+        $type = $this->masterForm->workTypeMaster->getValue();
         $opt = $this->masterForm->workTypeMaster;
         $select = $opt->getOptionList();
         $work = $select[$type];
-
+        $this->current_work = $work;
+        $this->pasport_id = $item->getID();
+        
         $detail = $item->typework[$work];
 
         $res = preg_match_all('/\<size\>([0-9]+)\<\/size\>\<quantity\>([0-9]+)\<\/quantity\>/i',$item->quantity,$all_size);
@@ -160,7 +153,7 @@ class MasterPage extends \App\Pages\Base
         array_shift($all_master);
         array_shift($all_master);
         $size_master = array_merge($all_size, $all_master);
-//        var_dump($size_master);
+
 
         $this->list_size = [];
 
@@ -170,16 +163,12 @@ class MasterPage extends \App\Pages\Base
         $this->tableWorkForm->listWorkModelMaster->Reload();
         $this->modelNameSize->setText($item->model);
         $this->modelNameSize->setVisible(true);
-//        $this->tableWorkForm->modelNameSize->setText($item->model);
-//        $this->tableWorkForm->showTypeWork->setText($work);
-//        $this->masterForm->setVisible(false);
 
         $this->panelModelMaster->setVisible(false);
         $this->tableWorkForm->setVisible(true);
     }
 
-    public function listWorkModelMasterOnRow($row)
-    {
+    public function listWorkModelMasterOnRow($row){
         $item = $row->getDataItem();
         $row->add(new Label('itemSizeModel', $item->size));
         $row->add(new TextInput('itemCountModel'));
@@ -189,35 +178,78 @@ class MasterPage extends \App\Pages\Base
         $row->add(new ClickLink('itemEditDefect'))->onClick($this, 'itemEditDefectOnClick');
     }
 
-    public function editDefectModelOnClick($sender)
-    {
+    public function editDefectModelOnClick($sender){
         $this->tableWorkForm->setVisible(false);
         $this->defectForm->setVisible(true);
 
         $this->list_defect = [];
         $defects = ["Брак на коже", "Моя вина", "Клей", "Другое, вызвать Администратора"];
-//        $text = "";
+
         for($i = 0; $i < count($this->list_size); $i++){
             $id = $this->list_size[$i]->getID();
             $sz = $this->list_size[$i]->size;
             $defect = "";
             if(count($defects) > $i) $defect = $defects[$i];
             $this->list_defect[] = new WorksSize($id, $sz, "", "", $defect);
-//            $text .= $this->list_defect[$i]->__toString();
         }
-//        var_dump($this->list_defect);
-//        $this->defectForm->defectInfo->setText($text);
         $this->defectForm->listDefectModel->Reload();
-
     }
 
     public function saveDefectModelOnClick($sender)
     {
-        $send = $sender;
+        $isSelect = false;
         if($sender->id == "saveDefectModel"){
-            $listDefectModel = $this->listDefectModel->getChildComponents();
+            $listDefectModel = $this->defectForm->listDefectModel->getChildComponents();
+            $work = $this->current_work;
+            $size_defect = "";
+            $text = "Описание: ";
+
+
+            foreach($listDefectModel as $elem){
+                $defects = $elem->getChildComponents();
+                $sel = false;
+                $desc = "";
+                foreach($defects as $key=>$value){
+                    if(str_starts_with($key, "defectSize") == true){
+                        $size_defect = $value->getText();
+                    }else if(str_starts_with($key, "defectSelect") == true){
+                        $sel = $value->getValue();
+
+                    }else if(str_starts_with($key, "defectDescribe") == true){
+                        $desc = $value->getText();
+                    }
+                }
+                if($sel == true){
+                    $text .= $desc . ". ";
+                    $isSelect = true;
+                }
+            }
+            $defectInfo = $this->defectForm->defectInfo->getText();
+            if($isSelect == true){
+                $detail = "<master>" . $this->employee_name . "</master>" .
+                    "<work>" . $work . "</work>" . "<size>" . $size_defect . "</size>" . "<defect>" . $text . "</defect>";
+                $conn = \ZDB\DB::getConnect();
+                $sql = "SELECT id as model_id FROM model WHERE pasport_id = " . $this->pasport_id;
+                $rs = $conn->Execute($sql);
+
+                $model_id = $rs->fields['model_id'];
+
+                date_default_timezone_set("Europe/Moscow");
+                $date = date("Y-m-d H:i:s");
+                $sql = "INSERT INTO defect_model(model_id, monitor, detail, created) VALUES(" . "'" . $model_id . "'" .
+                    "," . "'" . $defectInfo . "'" . "," . "'" . $detail . "'" . "," . "'" . $date . "'" . ")";
+                $res = $conn->Execute($sql);
+            }
+        }
+
+        if($isSelect == true){
+            $this->defectForm->defectInfo->setText('');
+            $this->defectForm->setVisible(false);
+            $this->tableWorkForm->setVisible(true);
+        }else{
 
         }
+
     }
 
     public function itemEditDefectOnClick($sender)
@@ -300,15 +332,16 @@ class WorksSize implements \Zippy\Interfaces\DataItem
     public $total_quantity;
     public $master_quantity;
     public $defect;
-//    public $detail;
+    public $select;
 
-    public function __construct($id, $size, $total_quantity, $master_quantity, $defect = "")
+    public function __construct($id, $size, $total_quantity, $master_quantity, $defect = "", $select=false)
     {
         $this->id = $id;
         $this->size = $size;
         $this->total_quantity = $total_quantity;
         $this->master_quantity = $master_quantity;
         $this->defect = $defect;
+        $this->select = $select;
     }
     public function __toString()
     {
