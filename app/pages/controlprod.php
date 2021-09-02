@@ -32,7 +32,7 @@ class ControlProd extends \App\Pages\Base
     {
         parent::__construct($params);
         $conn = \ZDB\DB::getConnect();
-        $sql = "SELECT p.id, p.name, t.type_work FROM pasport p, model m, typework t 
+        $sql = "SELECT p.id, p.name, t.type_work, m.id as model_id FROM pasport p, model m, typework t 
                 WHERE m.in_work = true and p.id = m.pasport_id and t.pasport_id = p.id";
         $rs = $conn->Execute($sql);
 
@@ -51,7 +51,7 @@ class ControlProd extends \App\Pages\Base
             }else{
                 $brr[] = $r['id'];
             }
-            $this->modelWork[] = new ListModelWork($r['id'], $r['name'], $r['type_work']);
+            $this->modelWork[] = new ListModelWork($r['id'], $r['name'], $r['type_work'], $r['model_id']);
         }
 //        $crr = array_unique($brr, SORT_NUMERIC);
         sort($brr);
@@ -81,10 +81,12 @@ class ControlProd extends \App\Pages\Base
             $trr = [];
             $hrr = ["Модель"];
             $modelName = "";
+            $model_ID = null;
             foreach ($this->modelWork as $mw){
                 if($mw->getID() == $id){
                     $hrr[] = $mw->typework;
                     $modelName = $mw->model;
+                    $model_ID = $mw->getModelID();
                 }
             }
             $trr[] = $hrr;
@@ -110,6 +112,7 @@ class ControlProd extends \App\Pages\Base
             $tbl->id = $id;
             $tbl->elems = $trr;
             $tbl->count = $i;
+            $tbl->model_id = $model_ID;
             $this->list_works[] = $tbl;
 
         }
@@ -217,17 +220,18 @@ class ListModelWork
     public $id;
     public $model;
     public $typework;
-//    public $detail;
+    public $model_id;
 
-    public function __construct($id, $model, $typework /*,$detail*/)
+    public function __construct($id, $model, $typework ,$model_id)
     {
         $this->id = $id;
         $this->model = $model;
         $this->typework = $typework;
-//        $this->detail = $detail;
+        $this->model_id = $model_id;
     }
 
     public function getID() { return $this->id; }
+    public function getModelID() { return $this->model_id; }
 }
 
 class ListMastersWork

@@ -26,9 +26,11 @@ class ComponentProd extends \Zippy\Html\CustomComponent implements \Zippy\Interf
 //        var_dump($this->value);
         $arr = $this->value;
         $brr = $arr->elems;
+        $model_id = $arr->model_id;
         $row = count($brr);
         $col = count($brr[0]);
-        $this->str = $this->createTable($row, $col, $brr);
+//        $data = "model";
+        $this->str = $this->createTable($row, $col, $brr, $model_id, "model");
         return $this->str;
     }
 
@@ -43,10 +45,11 @@ class ComponentProd extends \Zippy\Html\CustomComponent implements \Zippy\Interf
         $this->value = $value;
     }
 
-    public function createTable($row, $col, $arr)
+    public function createTable($row, $col, $arr, $mid, $data)
     {
         //table-borderless
-        $tpl = "<table class='table table-striped table-sm table-bordered' style='margin: 10px 0;'>";
+        $model = "model_" . $mid;
+        $tpl = "<table id=" . $model . " " . "data-model=" . $data . "  class='table table-striped table-sm table-bordered' style='margin: 10px 0;'>";
         for ($i = 0; $i < $row; $i++){
             $tpl .= "<tr>";
             for($j = 0; $j < $col; $j++){

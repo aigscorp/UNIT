@@ -58,14 +58,6 @@ class Production extends \App\Pages\Base
         }
 
         $this->add(new \App\Widgets\MenuProduction('widgetMenu', $this, ''))->setVisible(true);
-//        $this->add(new Panel('panelButton'))->setVisible(true);
-//        $this->panelButton->add(new ClickLink('showProduction'));
-//        $this->panelButton->add(new ClickLink('showWork'));
-//        $this->panelButton->add(new ClickLink('showStore'));
-//        $this->panelButton->add(new ClickLink('showCustomer'));
-//        $this->panelButton->add(new ClickLink('showDirector'));
-
-
         $this->add(new Panel('detailProduction'))->setVisible(true);
 //        $this->detailProduction->setVisible(false);
         $this->detailProduction->add(new DataView('list',

@@ -7,26 +7,26 @@
 
 
 <!-- Кнопка-триггер модального окна -->
-<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal" id="msg">
-    Запустить демонстрацию модального окна
+<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#warnModal" id="msg" style="position: absolute;left: -99999px;top: -99999px;">
+    
 </button>
 
 <!-- Модальное окно -->
-<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+<div class="modal fade" id="warnModal" tabindex="-1" aria-labelledby="warnModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel">Заголовок модального окна</h5>
+                <h5 class="modal-title" id="warnModalLabel">Предупреждение</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
             <div class="modal-body">
-                ...
+                
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
-                <button type="button" class="btn btn-primary">Сохранить изменения</button>
+                <!-- <button type="button" class="btn btn-primary">Сохранить изменения</button> -->
             </div>
         </div>
     </div>
@@ -146,16 +146,4 @@
         </div>
     </div>
 </body>
-<script>
-
-    window.onload = function () {
-      console.log('defectSelect');
-      function check_saveDefectModel() {
-        // console.log('EVENT');
-        // alert('EVENT');
-        return confirm('delete item');
-      }
-    };
-
-</script>
 </html>
