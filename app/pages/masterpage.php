@@ -43,6 +43,11 @@ class MasterPage extends \App\Pages\Base
         $rs = $conn->Execute($sql);
 //        print_r($rs->fields);
 
+        if($rs->fields == false){
+            App::Redirect("\\App\\Pages\\Main");
+            die();
+        }
+
         $emp_id = $rs->fields['employee_id'];
         $emp_name = $rs->fields['emp_name'];
         $this->employee_name = $emp_name;

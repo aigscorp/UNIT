@@ -168,6 +168,7 @@
                                     </p>
                                 </a>
                                 <ul class="nav nav-treeview">
+                                    {{#showproductmenu}}
                                     <li class="nav-item has-treeview">
                                         <a href="?p=/App/Pages/Production" class="nav-link">
                                             <i class="fa nav-icon"></i>
@@ -176,14 +177,6 @@
                                             </p>
                                         </a>
                                     </li>
-                                    <!--<li class="nav-item has-treeview">-->
-                                        <!--<a href="?p=/App/Pages/Pasport" class="nav-link">-->
-                                            <!--<i class="fa nav-icon"></i>-->
-                                            <!--<p>-->
-                                                <!--Паспорт-->
-                                            <!--</p>-->
-                                        <!--</a>-->
-                                    <!--</li>-->
                                     <li class="nav-item has-treeview">
                                         <a href="?p=/App/Pages/Reference/PasportList" class="nav-link">
                                             <i class="fa nav-icon"></i>
@@ -192,7 +185,8 @@
                                             </p>
                                         </a>
                                     </li>
-
+                                    {{/showproductmenu}}
+                                    {{#showmastermenu}}
                                     <li class="nav-item has-treeview">
                                         <a href="?p=/App/Pages/MasterPage" class="nav-link">
                                             <i class="fa nav-icon"></i>
@@ -201,6 +195,7 @@
                                             </p>
                                         </a>
                                     </li>
+                                    {{/showmastermenu}}
                                 </ul>
                             </li>
 

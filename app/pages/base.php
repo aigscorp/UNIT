@@ -147,8 +147,10 @@ class Base extends \Zippy\Html\WebPage
             $this->_tvars["showregmenu"]  = true;
             $this->_tvars["showrefmenu"]  = true;
             $this->_tvars["showsermenu"]  = true;
-            $this->_tvars["showmodmenu"]  = true;  
-        }        
+            $this->_tvars["showmodmenu"]  = true;
+            $this->_tvars["showproductmenu"] = true; //добавлено для производства
+            $this->_tvars["showmastermenu"]  = false; //добавлено для производства
+        }else{ $this->_tvars["showmastermenu"]  = true; } //добавлено для мастеров
   
         //скрыть  боковое  меню
         $this->_tvars["hidesidebar"] = $user->hidesidebar == 1 ? 'hold-transition   sidebar-collapse' : 'hold-transition sidebar-mini sidebar-collapse';

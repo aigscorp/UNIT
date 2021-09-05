@@ -27,6 +27,7 @@ class ControlProd extends \App\Pages\Base
     public $list_works = [];
     public $masters = [];
     public $list_masters = [];
+    public $list_defect = [];
 
     public function __construct($params = null)
     {
@@ -53,8 +54,23 @@ class ControlProd extends \App\Pages\Base
             }
             $this->modelWork[] = new ListModelWork($r['id'], $r['name'], $r['type_work'], $r['model_id']);
         }
-//        $crr = array_unique($brr, SORT_NUMERIC);
+//        <master>Арсен</master><work>Кройка</work><size>40</size><defect>Описание: Брак на коже. Моя вина. </defect>
         sort($brr);
+        $sql_defect = "SELECT m.id, d.detail FROM defect_model d, model m WHERE m.in_work = true AND m.id = d.model_id";
+        $res = $conn->Execute($sql_defect);
+
+        $tags = ["master","work","size"];
+        foreach ($res as $r){
+            $obj_defect = new \stdClass();
+            $obj_defect->model_id = $r['id'];
+            for($i = 0; $i < count($tags); $i++){
+                $elem = $tags[$i];
+                $tag = $this->parseTagValue($r['detail'], $tags[$i]);
+                $obj_defect->$elem = $tag;
+            }
+            $this->list_defect[] = $obj_defect;
+        }
+
         $this->getMastersWork($brr);
 
         for($i = 0; $i < count($brr); $i++){
@@ -113,6 +129,11 @@ class ControlProd extends \App\Pages\Base
             $tbl->elems = $trr;
             $tbl->count = $i;
             $tbl->model_id = $model_ID;
+            foreach ($this->list_defect as $defect){
+                if($model_ID == $defect->model_id){
+                    $tbl->defect[] = $defect;
+                }
+            }
             $this->list_works[] = $tbl;
 
         }
@@ -175,10 +196,6 @@ class ControlProd extends \App\Pages\Base
             $obj_master->masters = $prr;
             $this->list_masters[] = $obj_master;
         }
-
-        $a = 1;
-        $b = $a + 2;
-
     }
 
     public function parseTag($str_tag, $name)
@@ -196,6 +213,16 @@ class ControlProd extends \App\Pages\Base
         }
         return $sum;
 
+    }
+
+    public function parseTagValue($str_tag, $name){
+        $matches = [];
+        $pattern = "/\<" . $name . "\>" . "([а-яА-ЯЁёa-zA-Z0-9]+)" . "\<\/" . $name . "\>/u";
+        $res = preg_match($pattern, $str_tag, $matches);
+        if($res == false){
+            echo "Error parsing " . $name . "<br>";
+        }
+        return $matches[1];
     }
 
     public function nextModelOnClick($sender)

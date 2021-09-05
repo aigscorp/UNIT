@@ -9,6 +9,11 @@
 namespace App\Pages;
 
 use App\Application as App;
+use App\Entity\Category;
+use App\Entity\Item;
+use App\Entity\ItemSet;
+use App\Helper as H;
+use App\System;
 use \Zippy\Html\Form\CheckBox;
 use \Zippy\Html\Form\Form;
 use \Zippy\Html\Form\TextInput;
@@ -52,15 +57,22 @@ class Pasport extends Base
         foreach ($rsw as $w){
             $tmp = $w['detail'];
             $res = preg_match('/\<zarp\>([0-9]+)\<\/zarp\>/i', $tmp, $matches);
-//            var_dump($matches);
             $price = 0.00;
             if($res == true) $price = $matches[1];
-//            var_dump($res);
-//            echo 'res => ' . $res . "<br>";
-//            echo "ID: $w->item_id, id: " . $w['item_id'] . "<br>";
             $this->works[] = new ListWork($w['item_id'], $w['itemname'], $price, false);
         }
-//        var_dump($this->sizes);
+////////////////////////////////////////////////
+        $cat = 9;
+        $conn = \ZDB\DB::getConnect();
+        $sql = "select * from items where items.cat_id = " . $cat;
+
+        $rs = $conn->Execute($sql);
+        foreach ($rs as $r){
+            $matches = [];
+            preg_match('/\<image_id\>([0-9]+)\<\/image_id\>/i', $r['detail'], $matches);
+            $this->materials[] = new ListMaterial($this, $r['item_id'], $r['itemname'], 0, $matches[1]);
+        }
+///////////////////////////////////////////////////////////
 
         $this->add(new Form('pasportForm'));
         $this->pasportForm->add(new TextInput('modelName'));
@@ -87,9 +99,26 @@ class Pasport extends Base
         $this->listWorkForm->add(new SubmitLink('saveWork'))->onClick($this, 'saveWorkOnClick');
         $this->listWorkForm->add(new SubmitLink('cancelWork'))->onClick($this, 'saveWorkOnClick'); //cancelWorkOnClick
 
+//        $this->add(new Panel('itemtable'))->setVisible(false);
+//        $this->itemtable->add(new Form('listMaterialForm'));
+//        $this->itemtable->listMaterialForm->add(new DataView('listmaterial',
+//            new ArrayDataSource(new \Zippy\Binding\PropertyBinding($this, "materials")),$this, 'listOnRowMaterial'));//->Reload();
+//        $this->itemtable->listMaterialForm->listmaterial->setPageSize(10);
+//        $this->itemtable->listMaterialForm->listmaterial->add(new \Zippy\Html\DataList\Paginator('pag', $this->itemtable->listMaterialForm->listmaterial));
+//
+//        $this->itemtable->listMaterialForm->add(new SubmitLink('saveMaterial'))->onClick($this, 'saveMaterialOnClick');
+//        $this->itemtable->listMaterialForm->add(new SubmitLink('cancelMaterial'))->onClick($this, 'saveMaterialOnClick');
+
         $this->add(new Form('listMaterialForm'))->setVisible(false);
-        $this->listMaterialForm->add(new DataView('listmaterial',
-            new ArrayDataSource(new \Zippy\Binding\PropertyBinding($this, "materials")),$this, 'listOnRowMaterial'))->Reload();
+        $this->listMaterialForm->add(new DataView('listmaterial', new ItemDataSource($this), $this, 'listOnRowMaterial'))->Reload();
+
+
+//        $this->listMaterialForm->add(new DataView('listmaterial',
+//            new ArrayDataSource(new \Zippy\Binding\PropertyBinding($this, "materials")),$this, 'listOnRowMaterial'));//->Reload();
+
+        $this->listMaterialForm->listmaterial->setPageSize(8);//H::getPG()
+        $this->listMaterialForm->listmaterial->add(new \Zippy\Html\DataList\Paginator('pag', $this->listMaterialForm->listmaterial));
+        $this->listMaterialForm->listmaterial->setSelectedClass('table-success');
         $this->listMaterialForm->add(new SubmitLink('saveMaterial'))->onClick($this, 'saveMaterialOnClick');
         $this->listMaterialForm->add(new SubmitLink('cancelMaterial'))->onClick($this, 'saveMaterialOnClick');
     }
@@ -138,31 +167,52 @@ class Pasport extends Base
         $row->add(new CheckBox('checkTypeWork'));//->onChange($this, 'checkOnSelect');
     }
 
-    public function listOnRowMaterial($row)
+    public function listOnRowMaterial(\Zippy\Html\DataList\DataRow $row)
     {
         $item = $row->getDataItem();
 
-        $row->add(new Label('typeMaterial',$item->material));
+        $row->add(new Label('typeMaterial',$item->itemname));//$item->material
 //        $row->add(new Label('quantity', $item->quantity));
         $row->add(new TextInput('quantity'));
-        $row->add(new CheckBox('checkTypeMaterial'));
+        $row->add(new \Zippy\Html\Link\BookmarkableLink('imagelistitem'))->setValue("/loadimage.php?id={$item->image_id}");
+        $row->imagelistitem->setAttribute('href', "/loadimage.php?id={$item->image_id}");
+        $row->imagelistitem->setAttribute('data-gallery', $item->image_id);
+        if ($item->image_id == 0) {
+            $row->imagelistitem->setVisible(false);
+        }
+//        $row->add(new CheckBox('checkTypeMaterial'));
     }
 
     public function addMaterialsOnClick()
     {
         $cat = 9;
         $conn = \ZDB\DB::getConnect();
-        $sql = "select * from items where items.cat_id = " . $cat;
+//        $sql_img = "SELECT image_id FROM images WHERE 1";
+//        $rs_img = $conn->Execute($sql_img);
 
-        $rs = $conn->Execute($sql);
-        foreach ($rs as $r){
-            $this->materials[] = new ListMaterial($r['item_id'], $r['itemname'], 0);
-        }
+//        $images = $rs_img->fields;
 
-        $this->listMaterialForm->listmaterial->Reload();
+//        $sql = "select * from items where items.cat_id = " . $cat;
+//
+//        $rs = $conn->Execute($sql);
+//        foreach ($rs as $r){
+//            $matches = [];
+//            preg_match('/\<image_id\>([0-9]+)\<\/image_id\>/i', $r['detail'], $matches);
+//            $this->materials[] = new ListMaterial($this, $r['item_id'], $r['itemname'], 0, $matches[1]);
+//        }
+
+//        $this->listMaterialForm->listmaterial->Reload();
+//        $this->itemtable->listMaterialForm->listmaterial->Reload();
         $this->pasportForm->setVisible(false);
         $this->listWorkForm->setVisible(false);
+
         $this->listMaterialForm->setVisible(true);
+//        $this->listMaterialForm->listmaterial->setPageSize(8);//H::getPG()
+//        $this->listMaterialForm->listmaterial->add(new \Zippy\Html\DataList\Paginator('pag', $this->listMaterialForm->listmaterial));
+//        $this->listMaterialForm->listmaterial->setSelectedClass('table-success');
+//        $this->listMaterialForm->listmaterial->Reload();
+
+
     }
 
     public function checkOnSelect($sender)
@@ -182,7 +232,7 @@ class Pasport extends Base
                 break;
             }
         }
-        $compon = $this->getComponent('listWorkForm');
+//        $compon = $this->getComponent('listWorkForm');
 //        $arr_comp = $compon->getChildComponents();
 
 //        $this->listWorkForm->listWork->checkTypeWork->getValue();
@@ -259,9 +309,6 @@ class Pasport extends Base
             $quan = 0;
             $sql = "INSERT INTO model(pasport_id, quantity) VALUES ({$this->_str($id_ins)}, {$this->_str($quan)})";
             $conn->Execute($sql);
-
-            var_dump($sql);
-            print_r($sql);
         }
         App::Redirect("\\App\\Pages\\Reference\\PasportList");
 
@@ -411,17 +458,21 @@ class ListWork implements \Zippy\Interfaces\DataItem
 
 class ListMaterial implements \Zippy\Interfaces\DataItem
 {
+    private $page;
     public $id;
     public $material;
     public $quantity;
-    public $select;
+    public $image_id;
+//    public $select;
 
-    public function __construct($id, $material, $quantity, $select=false)
+
+    public function __construct($page, $id, $material, $quantity, $image_id=0)
     {
+        $this->page = $page;
         $this->id = $id;
         $this->material = $material;
         $this->quantity = $quantity;
-        $this->select = $select;
+        $this->image_id = $image_id;
     }
 
     public function getMaterial() { return $this->material; }
@@ -447,4 +498,87 @@ class ListMaterial implements \Zippy\Interfaces\DataItem
     }
 
     public function getID() { return $this->id; }
+    public function getItemCount() {
+        return count($this->material);
+    }
+    public function getItems($start=null, $count=null, $sortfield = null, $asc = null) {
+        return $this->material;
+    }
+}
+
+class ItemDataSource implements \Zippy\Interfaces\DataSource
+{
+
+    private $page;
+
+    public function __construct($page) {
+        $this->page = $page;
+    }
+
+    private function getWhere($p = false) {
+
+//        $form = $this->page->filter;
+        $where = "1=1";
+//        $text = trim($form->searchkey->getText());
+//        $brand = trim($form->searchbrand->getText());
+//        $cat = $form->searchcat->getValue();
+        $cat = 9;
+//        $showdis = $form->showdis->isChecked();
+
+        if ($cat != 0) {
+            if ($cat == -1) {
+                $where = $where . " and cat_id=0";
+            } else {
+                $where = $where . " and cat_id=" . $cat;
+            }
+        }
+
+//        if (strlen($brand) > 0) {
+//
+//            $brand = Item::qstr($brand);
+//            $where = $where . " and  manufacturer like {$brand}      ";
+//        }
+//
+//
+//        if ($showdis == true) {
+//
+//        } else {
+//            $where = $where . " and disabled <> 1";
+//        }
+//        if (strlen($text) > 0) {
+//            if ($p == false) {
+//                $text = Item::qstr('%' . $text . '%');
+//                $where = $where . " and (itemname like {$text} or item_code like {$text}  or bar_code like {$text} )  ";
+//            } else {
+//                $text = Item::qstr($text);
+//                $where = $where . " and (itemname = {$text} or item_code = {$text}  or bar_code like {$text} )  ";
+//            }
+//        }
+        return $where;
+    }
+
+    public function getItemCount() {
+//        var_dump($this->getWhere());
+//        $ent = Item::findCnt($this->getWhere());
+//        var_dump($ent);
+        return Item::findCnt($this->getWhere());
+    }
+
+    public function getItems($start, $count, $sortfield = null, $asc = null) {
+        $l = Item::find($this->getWhere(true), "itemname asc", $count, $start);
+        $f = Item::find($this->getWhere(), "itemname asc", $count, $start);
+
+//        var_dump($f);
+
+        foreach ($f as $k => $v) {
+            $l[$k] = $v;
+        }
+//        var_dump($l);
+        return $l;
+    }
+
+    public function getItem($id) {
+        return Item::load($id);
+    }
+
 }

@@ -12,7 +12,6 @@ namespace App\Pages;
 class ComponentProd extends \Zippy\Html\CustomComponent implements \Zippy\Interfaces\Requestable
 {
     public $str = "";
-    public $data = "hello";
     public $value = null;
 
     public function __construct($id)
@@ -27,10 +26,26 @@ class ComponentProd extends \Zippy\Html\CustomComponent implements \Zippy\Interf
         $arr = $this->value;
         $brr = $arr->elems;
         $model_id = $arr->model_id;
+        $colors = [];
+        $defect = $arr->defect;
+        foreach ($defect as $d){
+            $work = $d->work;
+            $size = $d->size;
+            $x = 0; $y = 0;
+            for($j = 1; $j < count($brr[0]); $j++){
+                if($brr[0][$j] == $work) $y = $j;
+            }
+            for($i = 1; $i < count($brr); $i++){
+                $txt = explode(",", $brr[$i][0]);
+                $sz = $txt[1].trim();
+                if($sz == $size) $x = $i;
+            }
+            $colors[] = [$x, $y];
+        }
         $row = count($brr);
         $col = count($brr[0]);
 //        $data = "model";
-        $this->str = $this->createTable($row, $col, $brr, $model_id, "model");
+        $this->str = $this->createTable($row, $col, $brr, $model_id, "model", $colors);
         return $this->str;
     }
 
@@ -45,9 +60,9 @@ class ComponentProd extends \Zippy\Html\CustomComponent implements \Zippy\Interf
         $this->value = $value;
     }
 
-    public function createTable($row, $col, $arr, $mid, $data)
+    public function createTable($row, $col, $arr, $mid, $data, $color=[])
     {
-        //table-borderless
+
         $model = "model_" . $mid;
         $tpl = "<table id=" . $model . " " . "data-model=" . $data . "  class='table table-striped table-sm table-bordered' style='margin: 10px 0;'>";
         for ($i = 0; $i < $row; $i++){
@@ -61,7 +76,18 @@ class ComponentProd extends \Zippy\Html\CustomComponent implements \Zippy\Interf
                     }
 
                 }else{
-                    $tpl .= "<td>" . $arr[$i][$j] . "</td>";
+                    $fnd = false;
+                    for($p = 0; $p < count($color); $p++){
+                        if($color[$p][0] == $i && $color[$p][1] == $j){
+                            $fnd = true;
+                            break;
+                        }
+                    }
+                    if($fnd == true){
+                        $tpl .= "<td style='border-radius: 5px;background: #ed2d2d;' data-color='1';>" . $arr[$i][$j] . "</td>";
+                    }else{
+                        $tpl .= "<td style='border-radius: 5px;'>" . $arr[$i][$j] . "</td>";
+                    }
                 }
             }
             $tpl .= "</tr>";
