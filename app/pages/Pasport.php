@@ -24,6 +24,8 @@ use \Zippy\Html\Link\SubmitLink;
 use \Zippy\Html\Form\TextArea;
 use \Zippy\Html\Form\DropDownChoice;
 use Zippy\Html\Panel;
+use Zippy\Html\Link\RedirectLink;
+use App\Entity\Event;
 
 
 class Pasport extends Base
@@ -61,29 +63,26 @@ class Pasport extends Base
             if($res == true) $price = $matches[1];
             $this->works[] = new ListWork($w['item_id'], $w['itemname'], $price, false);
         }
-////////////////////////////////////////////////
-        $cat = 9;
-        $conn = \ZDB\DB::getConnect();
-        $sql = "select * from items where items.cat_id = " . $cat;
-
-        $rs = $conn->Execute($sql);
-        foreach ($rs as $r){
-            $matches = [];
-            preg_match('/\<image_id\>([0-9]+)\<\/image_id\>/i', $r['detail'], $matches);
-            $this->materials[] = new ListMaterial($this, $r['item_id'], $r['itemname'], 0, $matches[1]);
-        }
-///////////////////////////////////////////////////////////
 
         $this->add(new Form('pasportForm'));
         $this->pasportForm->add(new TextInput('modelName'));
-//        $this->pasportForm->add(new DataView('list',
-//            new ArrayDataSource(new \Zippy\Binding\PropertyBinding($this,"sizes")),$this,'listOnRow'))->Reload();
+        if(isset($_SESSION['modelName'])){
+            $this->pasportForm->modelName->setText($_SESSION['modelName']);
+            unset($_SESSION['modelName']);
+        }
+
         $this->pasportForm->add(new DropDownChoice('size', $this->sizes))->onChange($this, "onSize");
         $this->pasportForm->add(new Panel('panelNewModelSize'))->setVisible(false);
         $this->pasportForm->panelNewModelSize->add(new DataView('newSizeModel',
             new ArrayDataSource(new \Zippy\Binding\PropertyBinding($this,"razmer")),$this,'listSizeModelOnRow'))->Reload();
 //        $this->pasportForm->newSizeModel->setVisible(false);
-        
+
+        if(isset($_SESSION['size'])){
+            $this->pasportForm->size->setValue($_SESSION['size']);
+            $this->onSize();
+            unset($_SESSION['size']);
+        }
+
         $this->pasportForm->add(new TextArea('editcomment'))->setVisible(false);
         $this->pasportForm->add(new TextArea('editmaterial'))->setVisible(false);
         $this->pasportForm->add(new SubmitLink('saveModel'))->onClick($this, 'saveModelOnClick');
@@ -91,7 +90,9 @@ class Pasport extends Base
 //        $this->pasportForm->add(new DataView('listwork',new ArrayDataSource(new \Zipp$this->pasportForm->newSizeModel->setVisible(false);y\Binding\PropertyBinding($this,"works")),$this,'listOnRowWork'))->Reload();
 
         $this->pasportForm->add(new SubmitLink('addworks'))->onClick($this, 'addWorkOnClick');
+
         $this->pasportForm->add(new SubmitLink('addmaterials'))->onClick($this, 'addMaterialsOnClick');
+
 
         $this->add(new Form('listWorkForm'))->setVisible(false);
         $this->listWorkForm->add(new DataView('listwork',
@@ -99,22 +100,8 @@ class Pasport extends Base
         $this->listWorkForm->add(new SubmitLink('saveWork'))->onClick($this, 'saveWorkOnClick');
         $this->listWorkForm->add(new SubmitLink('cancelWork'))->onClick($this, 'saveWorkOnClick'); //cancelWorkOnClick
 
-//        $this->add(new Panel('itemtable'))->setVisible(false);
-//        $this->itemtable->add(new Form('listMaterialForm'));
-//        $this->itemtable->listMaterialForm->add(new DataView('listmaterial',
-//            new ArrayDataSource(new \Zippy\Binding\PropertyBinding($this, "materials")),$this, 'listOnRowMaterial'));//->Reload();
-//        $this->itemtable->listMaterialForm->listmaterial->setPageSize(10);
-//        $this->itemtable->listMaterialForm->listmaterial->add(new \Zippy\Html\DataList\Paginator('pag', $this->itemtable->listMaterialForm->listmaterial));
-//
-//        $this->itemtable->listMaterialForm->add(new SubmitLink('saveMaterial'))->onClick($this, 'saveMaterialOnClick');
-//        $this->itemtable->listMaterialForm->add(new SubmitLink('cancelMaterial'))->onClick($this, 'saveMaterialOnClick');
-
         $this->add(new Form('listMaterialForm'))->setVisible(false);
         $this->listMaterialForm->add(new DataView('listmaterial', new ItemDataSource($this), $this, 'listOnRowMaterial'))->Reload();
-
-
-//        $this->listMaterialForm->add(new DataView('listmaterial',
-//            new ArrayDataSource(new \Zippy\Binding\PropertyBinding($this, "materials")),$this, 'listOnRowMaterial'));//->Reload();
 
         $this->listMaterialForm->listmaterial->setPageSize(8);//H::getPG()
         $this->listMaterialForm->listmaterial->add(new \Zippy\Html\DataList\Paginator('pag', $this->listMaterialForm->listmaterial));
@@ -123,9 +110,8 @@ class Pasport extends Base
         $this->listMaterialForm->add(new SubmitLink('cancelMaterial'))->onClick($this, 'saveMaterialOnClick');
     }
 
-    public function onSize($sender)
+    public function onSize(/*$sender*/)
     {
-//        var_dump($sender);
         $val = $this->pasportForm->size->getValue();
         $sz = $this->pasportForm->size;
         $option = $sz->getOptionList();
@@ -133,11 +119,20 @@ class Pasport extends Base
 
         $arr = explode("-", $select);
         $this->razmer = [];
-        for($i = intval(trim($arr[0])), $k = 1; $i <= intval(trim($arr[1])); $i++, $k++){
-            $this->razmer[] = new ModelSize($k, $i);
+        $quantity = [];
+        if(isset($_SESSION['countofsize'])){
+            foreach ($_SESSION['countofsize'] as $k=>$cnt){
+                $quantity[] = $cnt;
+            }
+            unset($_SESSION['countofsize']);
         }
 
-//        $this->pasportForm->size->setValue($select);
+        for($i = intval(trim($arr[0])), $k = 1; $i <= intval(trim($arr[1])); $i++, $k++){
+            $quan = 0;
+            if(count($quantity) != 0) $quan = $quantity[$k-1];
+            $this->razmer[] = new ModelSize($k, $i, $quan);
+        }
+
         $this->pasportForm->panelNewModelSize->setVisible(true);
         $this->pasportForm->panelNewModelSize->newSizeModel->Reload();
         $this->pasportForm->size->setValue($val);
@@ -185,34 +180,12 @@ class Pasport extends Base
 
     public function addMaterialsOnClick()
     {
-        $cat = 9;
-        $conn = \ZDB\DB::getConnect();
-//        $sql_img = "SELECT image_id FROM images WHERE 1";
-//        $rs_img = $conn->Execute($sql_img);
+//        $this->pasportForm->setVisible(false);
+//        $this->listWorkForm->setVisible(false);
 
-//        $images = $rs_img->fields;
+//        $this->listMaterialForm->setVisible(true);
 
-//        $sql = "select * from items where items.cat_id = " . $cat;
-//
-//        $rs = $conn->Execute($sql);
-//        foreach ($rs as $r){
-//            $matches = [];
-//            preg_match('/\<image_id\>([0-9]+)\<\/image_id\>/i', $r['detail'], $matches);
-//            $this->materials[] = new ListMaterial($this, $r['item_id'], $r['itemname'], 0, $matches[1]);
-//        }
-
-//        $this->listMaterialForm->listmaterial->Reload();
-//        $this->itemtable->listMaterialForm->listmaterial->Reload();
-        $this->pasportForm->setVisible(false);
-        $this->listWorkForm->setVisible(false);
-
-        $this->listMaterialForm->setVisible(true);
-//        $this->listMaterialForm->listmaterial->setPageSize(8);//H::getPG()
-//        $this->listMaterialForm->listmaterial->add(new \Zippy\Html\DataList\Paginator('pag', $this->listMaterialForm->listmaterial));
-//        $this->listMaterialForm->listmaterial->setSelectedClass('table-success');
-//        $this->listMaterialForm->listmaterial->Reload();
-
-
+        App::Redirect("\\App\\Pages\\PasportItem");
     }
 
     public function checkOnSelect($sender)
@@ -464,8 +437,6 @@ class ListMaterial implements \Zippy\Interfaces\DataItem
     public $quantity;
     public $image_id;
 //    public $select;
-
-
     public function __construct($page, $id, $material, $quantity, $image_id=0)
     {
         $this->page = $page;
@@ -498,13 +469,7 @@ class ListMaterial implements \Zippy\Interfaces\DataItem
     }
 
     public function getID() { return $this->id; }
-    public function getItemCount() {
-        return count($this->material);
     }
-    public function getItems($start=null, $count=null, $sortfield = null, $asc = null) {
-        return $this->material;
-    }
-}
 
 class ItemDataSource implements \Zippy\Interfaces\DataSource
 {
@@ -516,14 +481,8 @@ class ItemDataSource implements \Zippy\Interfaces\DataSource
     }
 
     private function getWhere($p = false) {
-
-//        $form = $this->page->filter;
         $where = "1=1";
-//        $text = trim($form->searchkey->getText());
-//        $brand = trim($form->searchbrand->getText());
-//        $cat = $form->searchcat->getValue();
         $cat = 9;
-//        $showdis = $form->showdis->isChecked();
 
         if ($cat != 0) {
             if ($cat == -1) {
@@ -532,35 +491,10 @@ class ItemDataSource implements \Zippy\Interfaces\DataSource
                 $where = $where . " and cat_id=" . $cat;
             }
         }
-
-//        if (strlen($brand) > 0) {
-//
-//            $brand = Item::qstr($brand);
-//            $where = $where . " and  manufacturer like {$brand}      ";
-//        }
-//
-//
-//        if ($showdis == true) {
-//
-//        } else {
-//            $where = $where . " and disabled <> 1";
-//        }
-//        if (strlen($text) > 0) {
-//            if ($p == false) {
-//                $text = Item::qstr('%' . $text . '%');
-//                $where = $where . " and (itemname like {$text} or item_code like {$text}  or bar_code like {$text} )  ";
-//            } else {
-//                $text = Item::qstr($text);
-//                $where = $where . " and (itemname = {$text} or item_code = {$text}  or bar_code like {$text} )  ";
-//            }
-//        }
         return $where;
     }
 
     public function getItemCount() {
-//        var_dump($this->getWhere());
-//        $ent = Item::findCnt($this->getWhere());
-//        var_dump($ent);
         return Item::findCnt($this->getWhere());
     }
 
@@ -568,12 +502,9 @@ class ItemDataSource implements \Zippy\Interfaces\DataSource
         $l = Item::find($this->getWhere(true), "itemname asc", $count, $start);
         $f = Item::find($this->getWhere(), "itemname asc", $count, $start);
 
-//        var_dump($f);
-
         foreach ($f as $k => $v) {
             $l[$k] = $v;
         }
-//        var_dump($l);
         return $l;
     }
 
