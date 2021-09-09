@@ -33,6 +33,7 @@
                             </tr>
                         </table>
                         <div zippy="pag"></div>
+                        <input type="hidden" name="world" value="" id="world">
                     </div>
                     <div class="form-group">
                         <input zippy="saveMaterial" type="submit" value="Сохранить" class="btn btn-outline-primary">
@@ -44,12 +45,62 @@
         </div>
     </div>
 <script>
+    var elem;
   $(document).ready(function () {
-    console.log('script running...');
+    // console.log('script running...');
     $(document).on('click', '[data-toggle="lightbox"]', function (event) {
       event.preventDefault();
       $(this).ekkoLightbox({'alwaysShowClose': true});
     });
+
+    let pag = document.getElementById('pag');
+    if(pag != null || pag != undefined) {
+      console.log('pag live');
+      pag.addEventListener('click', (ev) => {
+        console.log(ev.target);
+        console.log('LISTENER');
+
+        elem = ev.target;
+        console.log('elem = ', elem);
+
+        // let world = document.getElementById('world');
+        // world.value = "HELLO";
+        // elem.parentElement.innerText;
+        let location = window.location.href;
+        let pattern = location.match(/\?q=p:\d{1,}/i);
+        console.log('pattern=', pattern[0], location);
+        // debugger;
+        // alert("stop");
+        // return false;
+        let current_page = document.querySelector('.page-item.active').innerText;
+        let page = elem.innerText;
+        let quantity = document.querySelectorAll('input[type=number]');
+        let qry = "";
+        for (let i = 0; i < quantity.length; i++) {
+          if (quantity[i].value != "" || quantity[i].value != 0) {
+            // qry += 'qnt_'+current_page.toString()+(i+1).toString() + "=" + quantity[i].value + ",";
+            qry += '::quantity_' + current_page.toString() + "_" +(i + 1).toString() + ':' + quantity[i].value;
+          }
+        }
+        if (qry == "") return;
+        pattern[0] += "::itemtable::listform::pag:";
+        let url = "http://localhost/index.php"; //"?q=p:83::itemtable::listform::pag:"
+        let urlp = "http://localhost/app/pages/proxy.php";
+        window.location = urlp + pattern[0] + page + qry; //+"::quantity:" + qry;
+        // let data = {
+        //     "id": model_id
+        // };
+        //http://localhost/index.php?q=p:83::itemtable::listform::pag:2
+        // let url = origin + "/index.php?q=p:44::itemtable::listform::pag:1";
+        // let remote_url = origin + "/api/TestJsonRPC"; //https://makepro.su
+        // postData(url, data)
+        //     .then((data)=>{
+        //         console.log(data.result);
+        //         // monitor.innerHTML = data.result.answer;
+        //         // str = data["result"];
+        // });
+      });
+    }
   });
 </script>
 </body>
