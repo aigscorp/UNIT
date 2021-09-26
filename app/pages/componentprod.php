@@ -62,8 +62,8 @@ class ComponentProd extends \Zippy\Html\CustomComponent implements \Zippy\Interf
 
     public function createTable($row, $col, $arr, $mid, $data, $color=[])
     {
-
-        $model = "model_" . $mid;
+        $model = "";
+        if(strlen($mid) > 0) $model = "model_" . $mid;
         $tpl = "<table id=" . $model . " " . "data-model=" . $data . "  class='table table-striped table-sm table-bordered' style='margin: 10px 0;'>";
         for ($i = 0; $i < $row; $i++){
             $tpl .= "<tr>";

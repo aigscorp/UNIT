@@ -9,6 +9,7 @@
 namespace App\Pages;
 
 use Zippy\Html\Form\Form;
+use Zippy\Html\Form\SubmitButton;
 use Zippy\Html\Form\TextArea;
 use \Zippy\Html\Link\ClickLink;
 use \Zippy\Html\Panel;
@@ -28,13 +29,16 @@ class ControlProd extends \App\Pages\Base
     public $masters = [];
     public $list_masters = [];
     public $list_defect = [];
+    public $list_total_work = [];
+
+//    SELECT p.id as pasport_id, m.id, d.detail FROM defect_model d, model m, pasport p WHERE m.in_work = true AND m.id = d.model_id AND m.finished = false AND d.status = false AND p.id = m.pasport_id
 
     public function __construct($params = null)
     {
         parent::__construct($params);
         $conn = \ZDB\DB::getConnect();
         $sql = "SELECT p.id, p.name, t.type_work, m.id as model_id FROM pasport p, model m, typework t 
-                WHERE m.in_work = true and p.id = m.pasport_id and t.pasport_id = p.id";
+                WHERE m.in_work = true and p.id = m.pasport_id and t.pasport_id = p.id and m.finished = false";
         $rs = $conn->Execute($sql);
 
         $brr = [];
@@ -56,13 +60,15 @@ class ControlProd extends \App\Pages\Base
         }
 //        <master>Арсен</master><work>Кройка</work><size>40</size><defect>Описание: Брак на коже. Моя вина. </defect>
         sort($brr);
-        $sql_defect = "SELECT m.id, d.detail FROM defect_model d, model m WHERE m.in_work = true AND m.id = d.model_id";
+        $sql_defect = "SELECT m.id, d.detail, m.pasport_id FROM defect_model d, model m 
+                       WHERE m.in_work = true AND m.id = d.model_id AND m.finished = false AND d.status = false";
         $res = $conn->Execute($sql_defect);
 
         $tags = ["master","work","size"];
         foreach ($res as $r){
             $obj_defect = new \stdClass();
             $obj_defect->model_id = $r['id'];
+            $obj_defect->pasport_id = $r['pasport_id'];
             for($i = 0; $i < count($tags); $i++){
                 $elem = $tags[$i];
                 $tag = $this->parseTagValue($r['detail'], $tags[$i]);
@@ -71,13 +77,22 @@ class ControlProd extends \App\Pages\Base
             $this->list_defect[] = $obj_defect;
         }
 
-        $this->getMastersWork($brr);
+
+        $str_id = implode("','", $brr);
+        $sql = "SELECT id, comment FROM pasport p WHERE p.id IN('{$str_id}')";
+        $rs = $conn->Execute($sql);
+        $total_size = [];
+        foreach ($rs as $r){
+            $total_size[$r['id']] = $r['comment'];
+        }
+
+        $res_master = $this->getMastersWork($brr, $total_size);
 
         for($i = 0; $i < count($brr); $i++){
             $id = $brr[$i];
-            $sql = "SELECT id, comment FROM pasport p WHERE p.id = " . $id;
-            $rs = $conn->Execute($sql);
-            $detail = $rs->fields['comment'];
+//            $sql = "SELECT id, comment FROM pasport p WHERE p.id = " . $id;
+//            $rs = $conn->Execute($sql);
+            $detail = $total_size[$id]; // 'comment';
             if($detail == "") continue;
             if(str_ends_with($detail, ",") == true){
                 $detail = substr($detail, 0, -1);
@@ -93,7 +108,7 @@ class ControlProd extends \App\Pages\Base
                     $frr[$matches[1]] = $matches[2];
                 }
             }
-
+//            $this->list_total_work = $frr;
             $trr = [];
             $hrr = ["Модель"];
             $modelName = "";
@@ -135,30 +150,41 @@ class ControlProd extends \App\Pages\Base
                 }
             }
             $this->list_works[] = $tbl;
-
         }
+
+
 
         $this->add(new \App\Widgets\MenuProduction('widgetMenu', $this, ''))->setVisible(true);
 
         $this->add(new Form('totalWorkForm'));
+        $this->add(new Form('panelMonitor'));
+        if($res_master == false){
+            $this->totalWorkForm->setVisible(false);
+            $this->panelMonitor->setVisible(false);
+        }
+        $this->panelMonitor->add(new SubmitLink('finishProduction'))->onClick($this, 'finishProductionOnClick', true); //заменить на SubmitButton
+
         $this->add(new ComponentProd('tableModelComponent'));//->onClick($this, 'testOnClick');
         $this->add(new ComponentMaster('tableMasterComponent'));
+        $this->add(new ComponentTotal('tableTotalComponent'));
+
         $this->add(new ClickLink('next'))->onClick($this, 'nextModelOnClick');
         $this->add(new ClickLink('prev'))->onClick($this, 'prevModelOnClick');
 
+
         $this->tableModelComponent->setValue($this->list_works[$this->count]);
         $this->tableMasterComponent->setValue($this->list_masters[$this->count]);
-
+        $this->tableTotalComponent->setValue($this->list_total_work[$this->count]);
     }
 
-    public function getMastersWork(array $arr)
+    public function getMastersWork(array $arr, array $total)
     {
-        if(is_array($arr) == false) return false;
+        if(count($arr) == 0) return false;
 
         $param = implode(",", $arr);
 
-        $sql = "SELECT wrk.mid as mid, wrk.id, wrk.emp_id, e.emp_name, wrk.type_work, wrk.detail, wrk.name  
-                FROM employees e, (SELECT tmp.name, tmp.type_work, m.id as mid, m.emp_id, tmp.id, m.detail 
+        $sql = "SELECT wrk.mid as mid, wrk.id, wrk.emp_id, e.emp_name, wrk.type_work, wrk.detail, wrk.name, wrk.init_quantity as init  
+                FROM employees e, (SELECT tmp.name, tmp.type_work, m.id as mid, m.emp_id, tmp.id, m.detail, m.init_quantity 
                 FROM masters m, ((SELECT pp.id, t.id as tid, t.type_work, pp.name 
                 FROM typework t, (SELECT p.id,p.name FROM pasport p WHERE p.id IN(" .$param . ")) as pp 
                 WHERE t.pasport_id = pp.id)) AS tmp WHERE m.typework_id = tmp.tid) AS wrk WHERE e.employee_id = wrk.emp_id";
@@ -166,25 +192,31 @@ class ControlProd extends \App\Pages\Base
         $conn = \ZDB\DB::getConnect();
         $rs = $conn->Execute($sql);
         foreach ($rs as $r){
-            $this->masters[] = new ListMastersWork($r['mid'], $r['id'], $r['emp_id'], $r['emp_name'], $r['type_work'], $r['detail'], $r['name']);
+            $this->masters[] = new ListMastersWork($r['mid'], $r['id'], $r['emp_id'], $r['emp_name'],
+                                                   $r['type_work'], $r['detail'], $r['name'], $r['init']);
         }
 
         for($i = 0, $k = 0; $i < count($arr); $i++, $k++){
             $prr = [];
+
             foreach ($this->masters as $master){
                 if($arr[$i] == $master->pasport_id){
+                    $str_total = $total[$arr[$i]];
+
                     $tmp = new \stdClass();
                     $fnd = false;
                     foreach($prr as $pr){
                         if($pr->emp_id == $master->emp_id){
-                            $pr->typework[$master->typework] = $this->parseTag($master->detail, "quantity");
+                            //$this->parseTag($str_total, "quantity")
+                            $pr->typework[$master->typework] = intval($master->init_quantity) - $this->parseTag($master->detail, "quantity");
                             $fnd = true;
                         }
                     }
                     if($fnd == false){
                         $tmp->emp_name = $master->emp_name;
                         $tmp->emp_id = $master->emp_id;
-                        $tmp->typework[$master->typework] = $this->parseTag($master->detail, "quantity");//$master->typework;
+                        //$this->parseTag($str_total, "quantity")
+                        $tmp->typework[$master->typework] = intval($master->init_quantity) - $this->parseTag($master->detail, "quantity");//$master->typework;
                         $tmp->model = $master->model;
                         $prr[] = $tmp;
                     }
@@ -195,7 +227,42 @@ class ControlProd extends \App\Pages\Base
             $obj_master->pasport_id = $arr[$i];
             $obj_master->masters = $prr;
             $this->list_masters[] = $obj_master;
+
+            $list_all_works = [];
+            foreach ($this->modelWork as $mw){
+                if($mw->id == $arr[$i]){
+                    $list_all_works[$mw->typework] = 0;
+                }
+            }
+
+            foreach ($prr as $item_prr){
+                foreach ($item_prr->typework as $key_work=>$val_qty){
+                    $list_all_works[$key_work] += $val_qty;
+                }
+            }
+
+            $total_quantity = $this->parseTag($str_total, "quantity");
+
+            $obj_total = new \stdClass();
+            $obj_total->count = $k;
+            $obj_total->total = $list_all_works;
+            $obj_total->total_qty = $total_quantity;
+
+            $this->list_total_work[] = $obj_total;
         }
+
+        foreach ($this->list_defect as $defect){
+            foreach ($this->list_masters as $master_defect){
+                if($defect->pasport_id == $master_defect->pasport_id){
+                    $master_defect->defect[] = $defect;
+                }else{
+//                    $master_defect->defect = null;
+                }
+            }
+
+        }
+
+        return true;
     }
 
     public function parseTag($str_tag, $name)
@@ -212,7 +279,6 @@ class ControlProd extends \App\Pages\Base
             $sum += intval($matches[1][$i]);
         }
         return $sum;
-
     }
 
     public function parseTagValue($str_tag, $name){
@@ -231,6 +297,7 @@ class ControlProd extends \App\Pages\Base
         if($cnt-1 > $this->count) $this->count++;
         $this->tableModelComponent->setValue($this->list_works[$this->count]);
         $this->tableMasterComponent->setValue($this->list_masters[$this->count]);
+        $this->tableTotalComponent->setValue($this->list_total_work[$this->count]);
 //        $this->updateAjax(array('tableModelComponent'), $this->tableModelComponent->setValue($this->drr[$this->count]));
     }
 
@@ -239,6 +306,77 @@ class ControlProd extends \App\Pages\Base
         if($this->count > 0) $this->count--;
         $this->tableModelComponent->setValue($this->list_works[$this->count]);
         $this->tableMasterComponent->setValue($this->list_masters[$this->count]);
+        $this->tableTotalComponent->setValue($this->list_total_work[$this->count]);
+    }
+
+    public function finishProductionOnClick($sender){
+        $s = $sender;
+        $count = $this->count;
+
+        $totalComponent = $this->getComponent('tableTotalComponent');
+        $arr_total = $totalComponent->value->total;
+        $min_work = min($arr_total);
+        $size_models = $this->list_works[$count]->elems;
+        $pasport_id = $this->list_masters[$count]->pasport_id;
+        $model_id = $this->list_works[$count]->model_id;
+
+        $master_ids = [];
+        foreach ($this->masters as $all_m){
+            if($all_m->pasport_id == $pasport_id){
+                $master_ids[] = $all_m->mid;
+            }
+        }
+
+        $str_master_ids = implode("','", $master_ids);
+        $conn = \ZDB\DB::getConnect();
+        $sql = "SELECT m.emp_id, m.typework_id, m.init_quantity, m.made_work, m.finished, t.type_work as work_name  
+                FROM masters m, typework t WHERE m.id IN('{$str_master_ids}') AND m.typework_id = t.id";
+        $rs = $conn->Execute($sql);
+
+        $list_works_done = [];
+        $typework_ids = [];
+        foreach ($rs as $r){
+            $works_done = new \stdClass();
+            $works_done->emp_id = $r['emp_id'];
+            $typework_id = $r['typework_id'];
+            $works_done->typework_id = $typework_id;
+            $typework_ids[$typework_id] = $r['work_name'];
+            $works_done->init_quantity = $r['init_quantity'];
+            $works_done->made_work = $r['made_work'];
+            $works_done->finished = $r['finished'];
+            $works_done->work_name = $r['work_name'];
+            $list_works_done[] = $works_done;
+        }
+
+        $typework_order = array_unique($typework_ids);
+//        $typework_order = [];
+//        foreach ($typework_id_unique as $tiu){
+//            $typework_order[] = $tiu;
+//        }
+
+        $list_swd = [];
+        foreach ($typework_order as $kto=>$vto){
+            $sort_work_done = new \stdClass();
+            $sort_work_done->typework_id = $kto;
+            $sort_work_done->work_name = $vto;
+            $sort_work_done->init_quantity = 0;
+            $fnd = false;
+            foreach ($list_works_done as $lwd){
+                if($lwd->typework_id == $kto){
+                    $sort_work_done->made_work[] = $lwd->made_work;
+                    $sort_work_done->init_quantity += intval($lwd->init_quantity);
+                    $sort_work_done->emp_id[] = $lwd->emp_id;
+                    $sort_work_done->finished[$lwd->emp_id] = $lwd->finished;
+                    $fnd = true;
+                }
+            }
+            if($fnd == true){
+                $list_swd[] = $sort_work_done;
+            }
+        }
+
+
+
     }
 }
 
@@ -270,8 +408,9 @@ class ListMastersWork
     public $emp_name;
     public $detail;
     public $model;
+    public $init_quantity;
 
-    public function __construct($mid, $pasport_id, $emp_id, $emp_name, $typework, $detail, $model)
+    public function __construct($mid, $pasport_id, $emp_id, $emp_name, $typework, $detail, $model, $init)
     {
         $this->mid = $mid;
         $this->pasport_id = $pasport_id;
@@ -280,6 +419,7 @@ class ListMastersWork
         $this->typework = $typework;
         $this->detail = $detail;
         $this->model = $model;
+        $this->init_quantity = $init;
     }
 
     public function getID() { return $this->id; }

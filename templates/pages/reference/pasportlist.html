@@ -1,8 +1,35 @@
 <html lang="ru">
 <head>
-
+    <script src="../../assets/js/popup.js"></script>
 </head>
 <body>
+
+<!-- Кнопка-триггер модального окна -->
+    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal" id="msg" style="position: absolute;left: -99999px;top: -99999px;">
+
+    </button>
+
+    <!-- Модальное окно -->
+    <span zippy="showModal"></span>
+    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Предупреждение</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="row">
         <div class="col-12" zippy="itemtable">
             <h3>Список паспортов моделей</h3>
@@ -17,22 +44,10 @@
                     <!--<th></th>-->
                     <!--{{/useimages}}-->
                     <th>Наименование</th>
-
                     <th>Размеры</th>
                     <th>В работе</th>
                     <th>Количество</th>
-                    <!--<th>Ед.</th>-->
 
-                    {{#hp1}}<th class="text-right  ">{{hp1}}</th>{{/hp1}}
-                    {{#hp2}}<th class="text-right  ">{{hp2}}</th>{{/hp2}}
-                    {{#hp3}}<th class="text-right  ">{{hp3}}</th>{{/hp3}}
-                    {{#hp4}}<th class="text-right  ">{{hp4}}</th>{{/hp4}}
-                    {{#hp5}}<th class="text-right  ">{{hp5}}</th>{{/hp5}}
-                    <!--<th>Ячейка</th>-->
-
-                    {{#usesnumber}}
-                    <th><i title="Учет серий производителя" class="fa fa-calendar-check"></i></th>
-                    {{/usesnumber}}
                     <th></th>
                     <th></th>
                     <th></th>
@@ -43,72 +58,48 @@
                 <tr zippy="itemlist">
                     <td zippy="itemname"></td>
                     <td zippy="itemsize"></td>
-                    <td></td>
-                    <td></td>
+                    <td zippy="inwork"></td>
+                    <td zippy="itemquantity"></td>
                     <td aling="center">
-                        <a zippy="copy" title="Копировать"><i class="fa fa-copy"></i></a> &nbsp;&nbsp;&nbsp;
+                        <!--<a zippy="copy" title="Копировать"><i class="fa fa-copy"></i></a> &nbsp;&nbsp;&nbsp;-->
                         <a zippy="edit" title="Редактировать"><i class="fa fa-edit"></i></a> &nbsp;
                     </td>
                 </tr>
             </table>
-            <!--<div zippy="pag"></div>-->
+            <!--<div id="tag"></div>-->
         </form>
         </div>
     </div>
 
-<div class="row">
-    <form zippy="editModelForm">
-        <h3>Редактирование</h3>
-        <div class="form-group">
-            <label for="modelName">Наименование модели</label>
-            <input type="text" class="form-control" zippy="modelName" required="required">
-        </div>
-        <div class="form-group">
-            <label for="modelSize">Размеры модели</label>
-            <select class="form-control" zippy="size">
-                <option value="0">Не выбран</option>
-                <!--<option zippy="list">-->
-                <!--<span zippy="modelSize"></span>-->
-                <!--</option>-->
-            </select>
-            <div zippy="panelNewModelSize">
-                <table class="table table-borderless table-striped">
-                    <tr>
-                        <th>Модель</th>
-                        <th>Размер</th>
-                        <th>Количество</th>
-                    </tr>
-                    <tr zippy="newSizeModel">
-                        <td><span zippy="namemodel"></span></td>
-                        <td>
-                            <span zippy="sizemodel"></span>
-                        </td>
-                        <td><input type="number" min="0" zippy="countofsize"/></td>
-                    </tr>
-                </table>
-            </div>
+    <script>
+      $(document).ready(function () {
+        // console.log('script running...');
+        $(document).on('click', '[data-toggle="lightbox"]', function (event) {
+          event.preventDefault();
+          $(this).ekkoLightbox({'alwaysShowClose': true});
+        });
 
-            <div class="form-group">
-                <a zippy="addworks">Добавить список работ</a>
-            </div>
-            <div class="form-group">
-                <textarea zippy="editcomment" class="form-control" readonly="readonly"></textarea>
-            </div>
-            <div class="form-group">
-                <a zippy="addmaterials">Добавить комплектующие для модели</a>
-            </div>
-            <div class="form-group">
-                <textarea zippy="editmaterial" class="form-control" readonly="readonly"></textarea>
-            </div>
-            <div class="form-group">
-                <input zippy="saveModel" type="submit" value="Сохранить1" class="btn btn-outline-primary">
-                <input zippy="cancelModel" type="submit" value="Отменить1" class="btn btn-outline-primary"/>
-            </div>
+        // let result = false;
+        // let frm = document.getElementById('listform');
+        //
+        // frm.addEventListener("click", (ev)=>{
+        //   // console.log('target ', ev.target);
+        //   let item = ev.target;
+        //   if(item.classList.contains('fa-edit')){
+        //     let parent = item.parentElement;
+        //     console.log(parent.id);
+        //     let edit = document.getElementById(parent.id);
+        //     let attr = edit.getAttribute('data-disabled');
+        //     if(attr == false){
+        //       $('.modal-body').text('Не выбрано описание брака!');
+        //       $('#msg').click();
+        //     }
+        //
+        //   }
+        // });
 
-        </div>
-    </form>
 
-</div>
-
+      });
+    </script>
 </body>
 </html>

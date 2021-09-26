@@ -26,9 +26,9 @@ class MenuProduction extends \Zippy\Html\PageFragment
         $this->add(new Form('panelButton'));
         $this->panelButton->add(new ClickLink('showProduction'))->onClick($this, 'showProductionOnClick');
         $this->panelButton->add(new ClickLink('showWork'))->onClick($this, 'showWorkOnClick');
-        $this->panelButton->add(new ClickLink('showStore'));
-        $this->panelButton->add(new ClickLink('showCustomer'));
-        $this->panelButton->add(new ClickLink('showDirector'));
+        $this->panelButton->add(new ClickLink('showStore'))->onClick($this, 'showStoreOnClick');
+        $this->panelButton->add(new ClickLink('showCustomer'))->onClick($this, 'showCustomerOnClick');;
+        $this->panelButton->add(new ClickLink('showDirector'))->onClick($this, 'showDirectorOnClick');;
     }
 
     public function showWorkOnClick()
@@ -38,5 +38,14 @@ class MenuProduction extends \Zippy\Html\PageFragment
     public function showProductionOnClick()
     {
         App::Redirect("\\App\\Pages\\Production");
+    }
+    public function showStoreOnClick(){
+        App::Redirect("\\App\\Pages\\StockBalance");
+    }
+    public function showCustomerOnClick(){
+        App::Redirect("\\App\\Pages\\OrderPage");
+    }
+    public function showDirectorOnClick(){
+        echo "реализация в виджете menuproduction.php";
     }
 }

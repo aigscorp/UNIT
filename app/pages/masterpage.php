@@ -30,6 +30,8 @@ class MasterPage extends \App\Pages\Base
     public $list_model = [];
     public $list_size = [];
     public $list_defect = [];
+
+
 //    public $select_work = "";
 
     public function __construct($params = null)
@@ -52,10 +54,10 @@ class MasterPage extends \App\Pages\Base
         $emp_name = $rs->fields['emp_name'];
         $this->employee_name = $emp_name;
         
-        $query = "SELECT CONCAT(p.name, ', ', p.size) as name, p.comment, t.pasport_id, t.type_work, m.typework_id, m.detail 
+        $query = "SELECT CONCAT(p.name, ', ', p.size) as name, p.comment, t.pasport_id, t.type_work, m.typework_id, m.detail, m.id as master_id, m.made_work 
                   FROM masters m, typework t, model md, pasport p 
                   WHERE m.emp_id = " . $emp_id. " AND t.id = m.typework_id 
-                  AND md.pasport_id = t.pasport_id AND md.in_work = true AND p.id = md.pasport_id";
+                  AND md.pasport_id = t.pasport_id AND md.in_work = true AND p.id = md.pasport_id AND t.finished = false";
         $rs = $conn->Execute($query);
         $type_works = [];
         foreach ($rs as $r){
@@ -64,16 +66,28 @@ class MasterPage extends \App\Pages\Base
             foreach ($this->listWorkEmployees as $employee){
                 if($employee->getID() == $pid){
                     $employee->typework[$r['type_work']] = $r['detail'];
+                    $employee->master_id[$r['type_work']] = $r['master_id'];
+                    $employee->made_work[$r['type_work']] = $r['made_work'];
                     $fnd = true;
                 }
             }
             if($fnd == false){
                 $this->listWorkEmployees[] = new WorksMaster($r['pasport_id'], $r['name'], $r['type_work'],
-                    $r['detail'], $r['comment']);
+                    $r['detail'], $r['comment'], $r['master_id'], $r['made_work']);
             }
             if(in_array($r['type_work'], $type_works) == false){
                 $type_works[] = $r['type_work'];
             }
+        }
+
+        $this->add(new Label('message'));
+        if(isset($_SESSION['saveSizeCount']) == true){
+            $this->message->setAttribute('data-msg', $_SESSION['saveSizeCount']);
+            unset($_SESSION['saveSizeCount']);
+        }
+        if(isset($_SESSION['saveConfirmModel']) == true){
+            $this->message->setAttribute('data-msg', $_SESSION['saveConfirmModel']);
+            unset($_SESSION['saveConfirmModel']);
         }
 
         $this->add(new Form('masterForm'));
@@ -90,7 +104,7 @@ class MasterPage extends \App\Pages\Base
 
         $this->tableWorkForm->add(new DataView('listWorkModelMaster',
             new ArrayDataSource(new \Zippy\Binding\PropertyBinding($this, "list_size")), $this, 'listWorkModelMasterOnRow'));
-        $this->tableWorkForm->add(new ClickLink('saveSizeCount'))->onClick($this, 'saveSizeCountOnClick');
+        $this->tableWorkForm->add(new SubmitLink('saveSizeCount'))->onClick($this, 'saveSizeCountOnClick', true);
         $this->tableWorkForm->add(new ClickLink('saveFinishModel'))->onClick($this, 'saveFinishModelOnClick');
 
         $this->add(new Form('defectForm'))->setVisible(false);
@@ -107,6 +121,9 @@ class MasterPage extends \App\Pages\Base
     }
 
     public function workTypeMasterOnChange(){
+
+        $this->message->setAttribute('data-msg', "");
+
         $val = $this->masterForm->workTypeMaster->getValue();
         $works = $this->masterForm->workTypeMaster;
         $option = $works->getOptionList();
@@ -173,14 +190,73 @@ class MasterPage extends \App\Pages\Base
         $this->tableWorkForm->setVisible(true);
     }
 
-    public function listWorkModelMasterOnRow($row){
+    public function listWorkModelMasterOnRow(\Zippy\Html\DataList\DataRow $row){
         $item = $row->getDataItem();
         $row->add(new Label('itemSizeModel', $item->size));
         $row->add(new TextInput('itemCountModel'));
-        $row->itemCountModel->setText($item->total_quantity - $item->master_quantity);
+
         $row->add(new Label('itemTotalModel', $item->total_quantity));
-        $row->add(new Label('itemRemainModel'));
+        $row->add(new Label('itemRemainModel', $item->master_quantity));
         $row->add(new ClickLink('itemEditDefect'))->onClick($this, 'itemEditDefectOnClick');
+//        $row->add(new TextInput('itemCountModel', new \Zippy\Binding\PropertyBinding($item, 'itemCountModel')));
+    }
+
+    public function saveSizeCountOnClick($sender){
+        $work_master = $this->tableWorkForm->listWorkModelMaster->getChildComponents();
+        $arr = [];
+        $item_count = "itemCountModel_";
+        $item_size = "itemSizeModel_";
+        $fields = false;
+        foreach ($work_master as $wm){
+            $brr = $wm->getChildComponents();
+            $kol = $brr[$item_count . $wm->getNumber()]->getText();
+            if($kol != "" && $kol != 0) $fields = true;
+            $sz = $brr[$item_size . $wm->getNumber()]->getText();
+            $arr[$sz] = $kol;
+        }
+
+        if($sender->id == 'saveSizeCount' && $fields == true){
+            $conn = \ZDB\DB::getConnect();
+            foreach ($this->listWorkEmployees as $emp){
+                if($emp->getID() == $this->pasport_id){
+                    $detail = $emp->typework[$this->current_work];
+                    $master_id = $emp->master_id[$this->current_work];
+                    $made_work = $emp->made_work[$this->current_work];
+                    break;
+                }
+            }
+
+            $res1 = preg_match_all('/\<size\>([0-9]+)\<\/size\>\<quantity\>([0-9]+)\<\/quantity\>/i',$detail,$match1);
+            $res2 = preg_match('/\<master\>.*?\<\/work\>/i',$detail,$match2);
+            $res3 = preg_match_all('/\<size\>([0-9]+)\<\/size\>\<done\>([0-9]+)\<\/done\>/i',$made_work,$match3);
+            $drr = [];
+            for($i = 0; $i < count($match1[1]); $i++){
+                $drr[$match1[1][$i]] = $match1[2][$i];
+            }
+            $write_detail = "";
+            foreach ($drr as $k=>$v){
+                $sum = intval($v) - intval($arr[$k]);
+                $write_detail .= "<size>" . $k . "</size>" . "<quantity>" . $sum . "</quantity>";
+            }
+
+            $str_upd_made = "";
+            $done_works = array_combine($match3[1], $match3[2]);
+            foreach ($done_works as $dk=>$dv){
+                if(array_key_exists($dk, $arr) == true){
+                    $sum_works = intval($done_works[$dk]) + intval($arr[$dk]);
+                    $str_upd_made .= "<size>" . $dk . "</size>" . "<done>" . $sum_works . "</done>";
+                }
+            }
+
+            $full_detail = $match2[0] . $write_detail;
+            $sql = "UPDATE masters SET detail = '{$full_detail}', made_work = '{$str_upd_made}' WHERE id = '{$master_id}'";
+            $rs = $conn->Execute($sql);
+
+            $send_txt = $this->current_work . ", количество работ изменено";
+            session_start();
+            $_SESSION['saveSizeCount'] = $send_txt;
+            App::Redirect("\\App\\Pages\\MasterPage");
+        }
     }
 
     public function editDefectModelOnClick($sender){
@@ -301,7 +377,13 @@ class MasterPage extends \App\Pages\Base
     public function saveConfirmModelOnClick($sender)
     {
         if($sender->id == 'saveConfirmModel'){
-
+            $conn = \ZDB\DB::getConnect();
+            $sql = "UPDATE typework SET finished = true WHERE pasport_id = '{$this->pasport_id}' AND type_work = '{$this->current_work}'";
+            $rs = $conn->Execute($sql);
+            $send_txt = $this->current_work . " данной модели завершена";
+            session_start();
+            $_SESSION['saveConfirmModel'] = $send_txt;
+            App::Redirect("\\App\\Pages\\MasterPage");
         }
         $this->finishModelForm->setVisible(false);
         $this->tableWorkForm->setVisible(true);
@@ -315,16 +397,18 @@ class WorksMaster implements \Zippy\Interfaces\DataItem
     public $typework = [];
 //    public $detail= [];
     public $quantity;
-//    public $size;
+    public $master_id = [];
+    public $made_work = [];
 
-    public function __construct($id, $model, $typework, $detail, $quantity)
+    public function __construct($id, $model, $typework, $detail, $quantity, $master_id, $made_work)
     {
         $this->id = $id;
         $this->model = $model;
         $this->typework[$typework] = $detail;
 //        $this->detail[] = $detail;
         $this->quantity = $quantity;
-//        $this->size = $size;
+        $this->master_id[$typework] = $master_id;
+        $this->made_work[$typework] = $made_work;
     }
 
     public function getID() { return $this->id; }
@@ -356,3 +440,7 @@ class WorksSize implements \Zippy\Interfaces\DataItem
 
     public function getID() { return $this->id; }
 }
+
+/*
+ * SELECT m.id, m.detail, t.type_work, m.finished FROM masters m, typework t, model md, pasport p WHERE m.emp_id = 4 AND t.id = m.typework_id AND md.pasport_id = t.pasport_id AND md.in_work = true AND p.id = md.pasport_id AND m.finished = false
+ * */

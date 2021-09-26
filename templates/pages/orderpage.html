@@ -1,0 +1,70 @@
+<html>
+<head>
+    <!--<script src="https://use.fontawesome.com/703aa5dab6.js"></script>-->
+
+</head>
+
+<body>
+<style>
+    .ordermsg{
+        white-space: pre;
+        opacity: 0;
+    }
+    td > .ordermsg > ul li:before {
+        font-family: 'Font Awesome\ 5 Free';
+        content: "\f7e5";
+        margin: 0 10px 0 -25px;
+        color: #0085ff;
+    }
+    /*\f067   '\f124'   'FontAwesome';*/
+</style>
+
+<div class="row">
+    <div zippy="widgetMenu"></div>
+</div>
+
+
+<div class="row">
+    <div class="col-12">
+        <form zippy="orderForm">
+            <table class="table table-hover  table-sm table-striped">
+                <tr>
+                    <th>Наименование товара</th>
+                    <th>Количество</th>
+                    <th>Предложения</th>
+                </tr>
+                <tr zippy="orderlist">
+                    <td zippy="ordername"></td>
+                    <td zippy="orderquantity"></td>
+                    <td >
+                        <!--<p zippy="ordermsg"></p>-->
+                        <span zippy="ordermsg" class="ordermsg">
+                            <!--<li zippy="message"></li>-->
+                        </span>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+</div>
+<script>
+
+    window.onload = function () {
+      console.log('orders');
+      let order = document.querySelectorAll('.ordermsg');
+      order.forEach((item)=>{
+        console.log('item=', item);
+        let str = item.innerText.split("|");
+        let txt = "<ul style='list-style: none'>"; //
+        for(let i = 0; i < str.length; i++){
+          txt += "<li>" + str[i] + "</li>"; //<i class='fa fa-square'></i>
+        }
+        txt += "</ul>";
+        item.innerText = "";
+        item.innerHTML = txt;
+      });
+
+    }
+</script>
+</body>
+</html>

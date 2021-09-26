@@ -186,6 +186,11 @@ class User extends \ZCL\DB\Entity
         return $this->user_id;
     }
 
+	public function isEmployee(){
+		$e = Employee::getByLogin($this->userlogin);
+		if($e == null) return false;
+		return true;
+	}
     // Подставляется   сотрудник  если  назначен  логин
     public function getUserName() {
         $e = Employee::getByLogin($this->userlogin);

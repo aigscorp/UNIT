@@ -1,0 +1,76 @@
+<html>
+<head>
+    <script src="../../assets/js/popup.js"></script>
+</head>
+<body>
+    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModal" id="msg" style="position: absolute;left: -99999px;top: -99999px;">
+
+    </button>
+
+    <!-- Модальное окно -->
+    <span zippy="showModal"></span>
+    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Предупреждение</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div zippy="widgetMenu"></div>
+    </div>
+    <div class="row">
+        <div class="col-9">
+            <form zippy="providerForm">
+                <div class="form-group">
+                    <table class="table table-hover  table-sm table-striped">
+                        <tr>
+                            <th>Наименование</th>
+                            <th>Количество, остаток</th>
+                            <th></th>
+                            <th>Планируемое количество, заказ</th>
+                        </tr>
+                        <tr zippy="providerlist">
+                            <td zippy="providername"></td>
+                            <td zippy="providerquantity"></td>
+                            <td>
+                                <!--<button zippy="providersend" class="form-control btn btn-outline-primary">Поставщику</button>-->
+                            </td>
+                            <td>
+                                <input type="number" zippy="providerorder" class="form-control" min="0">
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="form-group">
+                    <input type="submit" zippy="providersend" value="Отправить поставщикам" class="btn btn-outline-primary">
+                </div>
+            </form>
+        </div>
+        <div class="col-3">
+            <form zippy="companyInfo">
+                <div class="form-group">
+                    <textarea zippy="displayinfo" class="form-control" rows="10" readonly></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="showinfo">Показать информацию о компании</label>
+                    <button zippy="showinfo" class="btn btn-outline-primary form-control">Показать</button>
+                    <!--<a zippy="showinfo" title="Редактировать"><i class="fa fa-edit"></i></a>-->
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

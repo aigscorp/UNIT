@@ -14,6 +14,7 @@ use App\Entity\Item;
 use App\Entity\ItemSet;
 use App\Helper as H;
 use App\System;
+use function GuzzleHttp\Psr7\str;
 use \Zippy\Html\Form\CheckBox;
 use \Zippy\Html\Form\Form;
 use \Zippy\Html\Form\TextInput;
@@ -27,13 +28,21 @@ use Zippy\Html\Panel;
 use Zippy\Html\Link\RedirectLink;
 use App\Entity\Event;
 
+//function setGlob(){
+//    global $materials;
+//}
+
+$GLOBALS["material"] = "this is test";
 
 class Pasport extends Base
 {
     public $sizes = [];
     public $works = [];
-    public $materials = [];
     public $razmer = [];
+    public $str_params = "";
+    public $edit = false;
+    public $from_pasport_item = [];
+
 
     public function __construct($params = null)
     {
@@ -44,17 +53,14 @@ class Pasport extends Base
         $sql = "select * from items where items.cat_id = " . $cat;
 
         $rs = $conn->Execute($sql);
-
         foreach ($rs as $r){
-//            $this->sizes[] = $r;
-//            $this->razmer[] = new ModelSize($r['item_id'], $r['itemname']);
             $this->sizes[] = $r['itemname'];
         }
 
         $cat = 11;
-        $sql = "select * from items where items.cat_id = " . $cat;
-
+        $sql = "select * from items where items.cat_id = " . $cat . " ORDER BY itemname";
         $rsw = $conn->Execute($sql);
+
         $matches = [];
         foreach ($rsw as $w){
             $tmp = $w['detail'];
@@ -64,78 +70,133 @@ class Pasport extends Base
             $this->works[] = new ListWork($w['item_id'], $w['itemname'], $price, false);
         }
 
+        if($params != null) {
+            $this->str_params = $params;
+
+            $from_pasportitem = explode("::", $params);
+            $txt_model = "";
+            $txt_material_item = "";
+            switch (count($from_pasportitem)) {
+                case 2:
+                    $txt_material_item = $from_pasportitem[0];
+                    $txt_model = $from_pasportitem[1];
+                    break;
+                case 3:
+                    $txt_material_item = $from_pasportitem[0];
+                    $txt_model = $from_pasportitem[1];
+                    $is_edit = $from_pasportitem[2];
+                    if ($is_edit == "edit") $this->edit = true;
+                    break;
+                default:
+//                echo "Ошибка при передаче параметров в params= " . $params;
+                    $txt_material_item = trim($params);
+            }
+
+            $list_mat = explode("|", $txt_material_item);
+            $txt_material = "";
+            $txt_item_id = "";
+            for ($k = 0; $k < count($list_mat); $k++) {
+                if ($k % 2 == 0) $txt_material .= $list_mat[$k];
+                else $txt_item_id .= str_replace(["(", ")"], "", $list_mat[$k]) . ",";
+            }
+
+            if(str_ends_with($txt_item_id, ",") == true){
+                $txt_item_id = substr($txt_item_id, 0, -1);
+            }
+            $this->from_pasport_item = explode(",", $txt_item_id);
+
+            $rekv = [];
+            $md = "";
+            $sz = "";
+            $raz = "";
+            $works = "";
+            if (strlen(trim($txt_model)) > 0) {
+                $rekv = explode(";", $txt_model);
+                $md = $rekv[0];
+                $sz = $rekv[1];
+                if ($this->edit == true) {
+                    foreach ($this->sizes as $k => $s) {
+                        if ($s == $rekv[1]) {
+                            $sz = $k;
+                            break;
+                        }
+                    }
+                }
+                $works = $rekv[2];
+                $raz = $rekv[3];
+            }
+        }
+
+        $pasport_model = "Паспорт модели";
+        if($this->edit == true) $pasport_model .= " редактирование";
+        $this->add(new Label('pasportModel', $pasport_model));
         $this->add(new Form('pasportForm'));
         $this->pasportForm->add(new TextInput('modelName'));
-        if(isset($_SESSION['modelName'])){
-            $this->pasportForm->modelName->setText($_SESSION['modelName']);
-            unset($_SESSION['modelName']);
+        if(strlen($md) > 0){
+            $this->pasportForm->modelName->setText($md);
         }
 
         $this->pasportForm->add(new DropDownChoice('size', $this->sizes))->onChange($this, "onSize");
         $this->pasportForm->add(new Panel('panelNewModelSize'))->setVisible(false);
         $this->pasportForm->panelNewModelSize->add(new DataView('newSizeModel',
             new ArrayDataSource(new \Zippy\Binding\PropertyBinding($this,"razmer")),$this,'listSizeModelOnRow'))->Reload();
-//        $this->pasportForm->newSizeModel->setVisible(false);
 
-        if(isset($_SESSION['size'])){
-            $this->pasportForm->size->setValue($_SESSION['size']);
-            $this->onSize();
-            unset($_SESSION['size']);
+        if(strlen($sz) > 0){
+            $this->pasportForm->size->setValue($sz);
+            $this->onSize($raz);
         }
 
         $this->pasportForm->add(new TextArea('editcomment'))->setVisible(false);
+        if(strlen($works) > 0){
+            $this->pasportForm->editcomment->setText($works);
+            $this->pasportForm->editcomment->setVisible(true);
+        }
         $this->pasportForm->add(new TextArea('editmaterial'))->setVisible(false);
+        if(strlen(trim($txt_material)) > 0){
+            $this->pasportForm->editmaterial->setText($txt_material);
+            $this->pasportForm->editmaterial->setVisible(true);
+        }
         $this->pasportForm->add(new SubmitLink('saveModel'))->onClick($this, 'saveModelOnClick');
         $this->pasportForm->add(new SubmitLink('cancelModel'))->onClick($this, 'saveModelOnClick');
-//        $this->pasportForm->add(new DataView('listwork',new ArrayDataSource(new \Zipp$this->pasportForm->newSizeModel->setVisible(false);y\Binding\PropertyBinding($this,"works")),$this,'listOnRowWork'))->Reload();
-
         $this->pasportForm->add(new SubmitLink('addworks'))->onClick($this, 'addWorkOnClick');
-
         $this->pasportForm->add(new SubmitLink('addmaterials'))->onClick($this, 'addMaterialsOnClick');
-
 
         $this->add(new Form('listWorkForm'))->setVisible(false);
         $this->listWorkForm->add(new DataView('listwork',
             new ArrayDataSource(new \Zippy\Binding\PropertyBinding($this,"works")),$this,'listOnRowWork'))->Reload();
         $this->listWorkForm->add(new SubmitLink('saveWork'))->onClick($this, 'saveWorkOnClick');
         $this->listWorkForm->add(new SubmitLink('cancelWork'))->onClick($this, 'saveWorkOnClick'); //cancelWorkOnClick
-
-        $this->add(new Form('listMaterialForm'))->setVisible(false);
-        $this->listMaterialForm->add(new DataView('listmaterial', new ItemDataSource($this), $this, 'listOnRowMaterial'))->Reload();
-
-        $this->listMaterialForm->listmaterial->setPageSize(8);//H::getPG()
-        $this->listMaterialForm->listmaterial->add(new \Zippy\Html\DataList\Paginator('pag', $this->listMaterialForm->listmaterial));
-        $this->listMaterialForm->listmaterial->setSelectedClass('table-success');
-        $this->listMaterialForm->add(new SubmitLink('saveMaterial'))->onClick($this, 'saveMaterialOnClick');
-        $this->listMaterialForm->add(new SubmitLink('cancelMaterial'))->onClick($this, 'saveMaterialOnClick');
     }
 
-    public function onSize(/*$sender*/)
+    public function onSize($list_sz="")
     {
         $val = $this->pasportForm->size->getValue();
-        $sz = $this->pasportForm->size;
-        $option = $sz->getOptionList();
-        $select = $option[$val];
+        if($val != -1) {
+            $sz = $this->pasportForm->size;
+            $option = $sz->getOptionList();
+            $select = $option[$val];
 
-        $arr = explode("-", $select);
-        $this->razmer = [];
-        $quantity = [];
-        if(isset($_SESSION['countofsize'])){
-            foreach ($_SESSION['countofsize'] as $k=>$cnt){
-                $quantity[] = $cnt;
+            $arr = explode("-", $select);
+            $this->razmer = [];
+            $quantity = [];
+            if (strlen($list_sz) > 0) {
+                $quantity = explode(",", $list_sz);
             }
-            unset($_SESSION['countofsize']);
-        }
 
-        for($i = intval(trim($arr[0])), $k = 1; $i <= intval(trim($arr[1])); $i++, $k++){
-            $quan = 0;
-            if(count($quantity) != 0) $quan = $quantity[$k-1];
-            $this->razmer[] = new ModelSize($k, $i, $quan);
-        }
+            for ($i = intval(trim($arr[0])), $k = 1; $i <= intval(trim($arr[1])); $i++, $k++) {
+                $quan = 0;
+                if (count($quantity) != 0) $quan = explode(":", $quantity[$k - 1]);
+                $this->razmer[] = new ModelSize($k, $i, $quan[1]);
+            }
 
-        $this->pasportForm->panelNewModelSize->setVisible(true);
-        $this->pasportForm->panelNewModelSize->newSizeModel->Reload();
-        $this->pasportForm->size->setValue($val);
+            $this->pasportForm->panelNewModelSize->setVisible(true);
+            $this->pasportForm->panelNewModelSize->newSizeModel->Reload();
+            $this->pasportForm->size->setValue($val);
+        }else{
+            $this->pasportForm->panelNewModelSize->setVisible(false);
+//            $this->pasportForm->panelNewModelSize->newSizeModel->Reload();
+            $this->pasportForm->size->setValue($val);
+        }
         $this->updateAjax(array('size'));
     }
     public function listSizeModelOnRow($row)
@@ -175,27 +236,41 @@ class Pasport extends Base
         if ($item->image_id == 0) {
             $row->imagelistitem->setVisible(false);
         }
-//        $row->add(new CheckBox('checkTypeMaterial'));
     }
 
     public function addMaterialsOnClick()
     {
-//        $this->pasportForm->setVisible(false);
-//        $this->listWorkForm->setVisible(false);
-
 //        $this->listMaterialForm->setVisible(true);
 
-        App::Redirect("\\App\\Pages\\PasportItem");
+        $name_model = $this->pasportForm->modelName->getText();
+        $size = $this->pasportForm->size->getValue();
+        $list_work = $this->pasportForm->editcomment->getText();
+        $razm = $this->pasportForm->panelNewModelSize->newSizeModel->getChildComponents();
+
+        $str_to_items = $name_model . ";" . $size . ";" . $list_work . ";";
+        foreach ($razm as $ra){
+            $brr = $ra->getChildComponents();
+            foreach ($brr as $b=>$v){
+                if(str_starts_with($b, "sizemodel") == true){
+                    $s = explode("_", $b);
+                    $kol = "countofsize_" . $s[1];
+                    $str_to_items .= $v->getText() . ":" . $brr[$kol]->getValue() . ",";
+                }
+            }
+        }
+
+        foreach ($_SESSION as $key=>$sess){
+            if(str_starts_with($key, 'quantity') == true){
+                unset($_SESSION[$key]);
+            }
+        }
+
+        App::Redirect("\\App\\Pages\\PasportItem", $str_to_items);
     }
 
     public function checkOnSelect($sender)
     {
         $items = $sender->getOwner()->getDataItem();
-        $arr_send = $sender->getOwner()->getChildComponents();
-//        if(($items instanceof \Zippy\Html\DataList\DataRow) == true){
-//            var_dump("DATAROW");
-//            echo "DATAROW:" . "<br>";
-//        }
         $chk = $sender->isChecked();
         $id = $items->getID();
         foreach ($this->works as $work){
@@ -205,10 +280,6 @@ class Pasport extends Base
                 break;
             }
         }
-//        $compon = $this->getComponent('listWorkForm');
-//        $arr_comp = $compon->getChildComponents();
-
-//        $this->listWorkForm->listWork->checkTypeWork->getValue();
         $this->updateAjax(array('checkTypeWork'));
     }
     public function addWorkOnClick()
@@ -223,8 +294,8 @@ class Pasport extends Base
     public function saveModelOnClick($sender)
     {
         $id = $sender->id;
-        if($id == "saveModel") {
-            $conn = \ZDB\DB::getConnect();
+        $conn = \ZDB\DB::getConnect();
+        if($id == "saveModel" && $this->edit == false) {
             $name_model = $this->pasportForm->modelName->getText();
             $val = $this->pasportForm->size->getValue();
 //        $sz = $this->pasportForm->size;
@@ -253,82 +324,67 @@ class Pasport extends Base
                 $suite += intval($q);
             }
 
-            $sql = "INSERT INTO pasport(name, size, comment, quantity) 
+            $sql = "INSERT INTO pasport(name, size, comment, quantity)
                     VALUES({$this->_str($name_model)}, {$this->_str($size)}, {$this->_str($sizeRange)}, {$this->_str($suite)})";
 //        $sql .= "( " . "'" . $name_model . "', " . "'" . $size . "')";
             $conn->Execute($sql);
             $id_ins = $conn->_insertid();
-            print_r($id_ins);
+//            print_r($id_ins);
 
             foreach ($this->works as $work) {
                 if ($work->getSelect() == true) {
                     $w = $work->getWork();
                     $detail = "<work>" . $work->getWork() . "</work>";
-                    $sql_w = "INSERT INTO pasport_tax(pasport_id, model_item, detail) 
+                    $sql_w = "INSERT INTO pasport_tax(pasport_id, model_item, detail)
                       VALUES({$this->_str($id_ins)}, {$this->_str($w)}, {$this->_str($detail)})";
                     $conn->Execute($sql_w);
                 }
             }
-            foreach ($this->materials as $material){
-                if($material->getSelect() == true){
-                    $m = $material->getMaterial();
-                    $q = $material->getQuantity();
-                    $detail = "<material>" . $m . "</material>" . "<quantity>" . $q . "</quantity>";
-                    $sql_m = "INSERT INTO pasport_tax(pasport_id, model_item, detail) 
-                      VALUES ({$this->_str($id_ins)}, {$this->_str($m)}, {$this->_str($detail)})";
-                    $conn->Execute($sql_m);
+            $tetxarea_material = $this->pasportForm->editmaterial->getText();
+            $par = $this->str_params;
+            $str_material = explode("::", $par);
+            $materials = $str_material[0];
+
+
+            $match = array();
+            preg_match_all('/([а-яА-Яa-zA-Z, ].*?)([0-9()]+),/i',$tetxarea_material, $match);
+            $brr = [];
+            $crr = [];
+            for($j = 0; $j < count($match[0]); $j++){
+                for($i = 1; $i < count($match); $i++){
+                     $brr[] = [$match[$i][$j]];
                 }
+                $crr[] = $brr;
+                $brr = [];
+            }
+
+            for($i = 0; $i < count($crr); $i++){
+                $mm = trim($crr[$i][0][0]);
+                $mrr = explode(",", $mm);
+                $m = trim($mrr[0]);
+                $str_q = $crr[$i][1][0];
+                $q = trim(str_replace(["(", ")"], "", $str_q));
+                $detail = "<material>" . $m . "</material>" . "<quantity>" . $q . "</quantity>";
+                $sql_m = "INSERT INTO pasport_tax(pasport_id, model_item, detail, qty_material)
+                      VALUES ({$this->_str($id_ins)}, {$this->_str($m)}, {$this->_str($detail)}, true)";
+                $conn->Execute($sql_m);
             }
             $quan = 0;
-            $sql = "INSERT INTO model(pasport_id, quantity) VALUES ({$this->_str($id_ins)}, {$this->_str($quan)})";
+            //здесь добавить
+            $detail = "";
+            foreach ($this->from_pasport_item as $fpi){
+                $detail .= "<item_id>" . $fpi . "</item_id>";
+            }
+            //{$this->_str($id_ins)}, {$this->_str($detail)}
+            $today = date("Y-m-d H:i:s");
+            $sql = "INSERT INTO model(pasport_id, detail, created) VALUES ('{$id_ins}','{$detail}', '{$today}')";
             $conn->Execute($sql);
+        }else {
+            //UPDATE MODEL ОБНОВИТЬ ДАННЫЕ МОДЕЛИ
+            $this->edit = false;
+
         }
         App::Redirect("\\App\\Pages\\Reference\\PasportList");
-
-    }
-
-    public function saveMaterialOnClick($sender)
-    {
-        $id = $sender->id;
-        foreach ($this->materials as $material){
-            $material->resetQuantity();
-        }
-        if($id == 'saveMaterial'){
-//            $this->materials = [];
-            $str_mat = "";
-            $listmaterials = $this->listMaterialForm->listmaterial->getChildComponents();
-
-            foreach ($listmaterials as $listmaterial){
-                $childs = $listmaterial->getChildComponents();
-                $id = $listmaterial->getItemId();
-                foreach ($childs as $k=>$v){
-                    if(str_starts_with($k, "quantity") == true){
-                        $res = $v->getValue();
-                        if($res != "" && $res != "0"){
-                            foreach ($this->materials as $material){
-                                if($material->getID() == $id){
-                                    $material->setQuantity($res);
-                                    $material->setSelect(true);
-                                    $str_mat .= $material->getMaterial() . " (" . $res . ")" . ", ";
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-//            var_dump($str_mat);
-            if(strlen($str_mat) != 0){
-                $this->pasportForm->editmaterial->setText($str_mat);
-                $this->pasportForm->editmaterial->setVisible(true);
-            }
-        }else{
-            $this->pasportForm->editmaterial->setText("");
-            $this->pasportForm->editmaterial->setVisible(false);
-            $this->materials = [];
-        }
-        $this->pasportForm->setVisible(true);
-        $this->listMaterialForm->setVisible(false);
     }
 
     public function saveWorkOnClick($sender)

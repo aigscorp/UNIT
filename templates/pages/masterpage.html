@@ -32,9 +32,7 @@
     </div>
 </div>
 
-<div id="message" style="display: none; width: 100px; height: 100px; border: 1px solid red;">
-
-</div>
+<div zippy="message"></div>
 
     <h2>Заказы для мастеров</h2>
     <div class="row">
@@ -74,7 +72,7 @@
                         <th scope="col">Количество остаток</th>
                         <th scope="col"></th>
                     </tr>
-                    <tr zippy="listWorkModelMaster">
+                    <tr zippy="listWorkModelMaster" class="model-master">
                         <td><span zippy="itemSizeModel"></span></td>
                         <td>
                             <input zippy="itemCountModel" type="number" min="0"/>
@@ -89,11 +87,8 @@
                 <div class="form-group">
                     <input zippy="saveSizeCount" type="submit" value="Подтвердить" class="btn btn-outline-primary">
                     <input zippy="saveFinishModel" type="submit" value="Закончить выполнение модели" class="btn btn-outline-primary">
-                    <!--<input zippy="editDefectModel" type="submit" value="Брак" class="btn btn-outline-primary"/>-->
                 </div>
-                <!--<div class="form-group">-->
-                    <!--<input zippy="saveFinishModel" type="submit" value="Закончить выполнение модели" class="btn btn-outline-primary">-->
-                <!--</div>-->
+
             </form>
         </div>
     </div>
@@ -145,5 +140,20 @@
             </form>
         </div>
     </div>
+
+    <script>
+      window.onload = function () {
+          (function (){
+            let msg = document.querySelector('#message');
+            let attr = msg.getAttribute('data-msg');
+            if(attr != "" && attr != null && attr != false){
+              $('.modal-title').text("Инфо");
+              $('.modal-body').html(attr);// .text(txt);
+              $('#msg').click();
+              // msg.removeAttribute('data-msg');
+            }
+          })();
+      }
+    </script>
 </body>
 </html>

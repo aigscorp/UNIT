@@ -16,7 +16,6 @@ use App\Helper as H;
 use App\System;
 use Zippy\Html\DataList\ArrayDataSource;
 use Zippy\Html\DataList\DataView;
-use Zippy\Html\Form\AutocompleteTextInput;
 use Zippy\Html\Form\Button;
 use Zippy\Html\Form\CheckBox;
 use Zippy\Html\Form\DropDownChoice;
@@ -33,21 +32,22 @@ use Zippy\Html\Link\SubmitLink;
 class PasportList extends \App\Pages\Base
 {
     private $_item;
-    public $brr = [1=>"apple", 2=>"orange"];
 
     public function __construct($params = null)
     {
         parent::__construct($params);
 
+        $this->add(new Label('showModal'));
+        $this->showModal->setAttribute('data-show', false);
+        if($params == true || $params == "true"){
+            $this->showModal->setAttribute('data-show', true);
+        }
         $this->add(new Panel('itemtable'))->setVisible(true);
         $this->itemtable->add(new ClickLink('addnew'))->onClick($this, 'addNewOnClick');
         $this->itemtable->add(new Form('listform'));
 
-//        $ids = new ItemDataSource($this); $this->brr
-
         $this->itemtable->listform->add(new DataView('itemlist', new MyItemDataSource($this), $this, 'itemlistOnRow'))->Reload();
-        $a = 1;
-        $b = $a + 2;
+
     }
 
     public function itemlistOnRow(\Zippy\Html\DataList\DataRow $row)
@@ -55,13 +55,70 @@ class PasportList extends \App\Pages\Base
         $item = $row->getDataItem();
         $row->add(new Label('itemname', $item->name));
         $row->add(new Label('itemsize', $item->size));
-        $row->add(new ClickLink('edit'))->onClick($this, 'editModelOnClick');
+        $inwork = "Нет";
+        $show = false;
+        if($item->work == 1){
+            $inwork = "Да";
+            $show = true;
+        }
+        $row->add(new Label('inwork', $inwork));
+        $row->add(new Label('itemquantity', $item->quantity));
+        $row->add(new ClickLink('edit'))->onClick($this, 'editModelOnClick', $show);
+        $dis = "false";
+        if($item->work == 1) $dis = "true";
+        $row->edit->setAttribute('data-disabled', $dis);
+        $row->edit->setAttribute('data-pid', $item->id);
     }
+
 
     public function editModelOnClick($sender)
     {
-//        var_dump($sender);
+        $pasport_id = $sender->getAttribute('data-pid');
+        $disabled = $sender->getAttribute('data-disabled');
+        if($disabled == "true"){
+            $html = "<p>Модель находится в работе, редактирование недоступно.</p>";
+            $js = "  $('.modal-body').html('{$html}') ; $('#msg').click()";
+            $this->updateAjax(array(), $js);
+        }else {
 
+            $conn = \ZDB\DB::getConnect();
+            $sql = "SELECT p.name, p.size, p.comment, t.model_item, t.detail FROM pasport p, pasport_tax t 
+                WHERE p.id = t.pasport_id AND t.pasport_id=" . $pasport_id;
+            $rs = $conn->Execute($sql);
+            $items = [];
+            $works = [];
+            foreach ($rs as $r) {
+                $modelName = $r['name'];
+                $modelSize = $r['size'];
+                $comment = $r['comment'];
+//            $bool = preg_match('/\<work\>+/i',$r['detail']);
+
+                if (preg_match('/\<work\>+/i', $r['detail']) == true) {
+                    $works[] = $r['model_item'];
+                } else {
+                    $items[] = $r['detail'];
+                }
+            }
+            $list_work = implode(",", $works);
+            $list_work .= ",";
+
+            $res = preg_match_all('/\<size\>([0-9]+)\<\/size\>\<quantity\>([0-9]+)\<\/quantity\>/i', $comment, $all_sizes);
+
+            $sz_quan = "";
+            for ($i = 0; $i < count($all_sizes[0]); $i++) {
+                $sz_quan .= $all_sizes[1][$i] . ":" . $all_sizes[2][$i] . ",";
+            }
+            $str_to_items = $modelName . ";" . $modelSize . ";" . $list_work . ";" . $sz_quan . ";";
+            $text_material = "";
+
+            for ($i = 0; $i < count($items); $i++) {
+                preg_match_all('/\<material\>([а-яА-Яa-zA-Z ].*?)\<\/material\>\<quantity\>([0-9]+)\<\/quantity\>/i', $items[$i], $all_material);
+                $text_material .= $all_material[1][0] . " (" . $all_material[2][0] . "),";
+            }
+
+            $str_edit_text = $text_material . "::" . $str_to_items . "::" . "edit";
+            App::Redirect("\\App\\Pages\\Pasport", $str_edit_text);
+        }
 
     }
 
@@ -105,7 +162,8 @@ class MyItemDataSource implements \Zippy\Interfaces\DataSource
     {
         $this->page = $page;
         $conn = \ZDB\DB::getConnect();
-        $sql = "SELECT * FROM pasport";
+        $sql = "SELECT p.id as id, p.name as name, p.size as size, p.quantity as quantity, m.in_work as work 
+        FROM pasport p, model m where p.id = m.pasport_id";
         $rs = $conn->Execute($sql);
         foreach ($rs as $r){
             $this->brr[] = $r;

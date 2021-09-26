@@ -46,8 +46,8 @@ class Employee extends \ZCL\DB\Entity
 
         parent::afterLoad();
     }
-
-    //найти  по  логину
+	
+	//найти  по  логину
     public static function getByLogin($login) {
         if (strlen($login) == 0) {
             return null;

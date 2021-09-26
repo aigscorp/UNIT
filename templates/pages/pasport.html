@@ -1,26 +1,64 @@
 <html lang="ru">
 <head>
-    <link rel="stylesheet" href="/assets/css/ekko-lightbox.css">
-    <script src="/assets/js/ekko-lightbox.js" type="text/javascript"></script>
+    <!--<link rel="stylesheet" href="/assets/css/ekko-lightbox.css">-->
+    <!--<script src="/assets/js/ekko-lightbox.js" type="text/javascript"></script>-->
+    <script src="../../assets/js/popup.js"></script>
 </head>
 <body>
+    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#warnModal" id="msg" style="position: absolute;left: -99999px;top: -99999px;">
+
+    </button>
+
+    <!-- Модальное окно -->
+    <div class="modal fade" id="warnModal" tabindex="-1" aria-labelledby="warnModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="warnModalLabel">Предупреждение</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>
+                    <!-- <button type="button" class="btn btn-primary">Сохранить изменения</button> -->
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="row">
-        <h2>Паспорт модели</h2>
+        <h2 zippy="pasportModel"></h2>
     </div>
+
     <div class="row">
-        <div class="col-8">
-    <form zippy="pasportForm" style="width: 30%;">
+        <div class="navbar nav">
+            <form zippy="filter" class="form-inline">
+                <label for="searchcat">категория </label>
+                <select class="form-control mr-2" zippy="searchcat">
+                    <option value="0">Не задана</option>
+                </select>
+            </form>
+        </div>
+    </div>
+
+    <div class="row">
+
+        <div class="col-6">
+        <form zippy="pasportForm">
 
                 <div class="form-group">
                     <label for="modelName">Наименование модели</label>
-                    <input type="text" class="form-control" zippy="modelName" required="required">
+                    <input type="text" class="form-control" zippy="modelName" placeholder="Наименование" required="true">
                 </div>
 
                 <div class="form-group">
                     <label for="modelSize">Размеры модели</label>
                     <select class="form-control" zippy="size">
-                        <option value="0">Не выбран</option>
+                        <option value="-1">Не выбран</option>
                     </select>
                     <div zippy="panelNewModelSize">
                         <table class="table table-borderless table-striped">
@@ -41,20 +79,19 @@
                 </div>
 
                 <div class="form-group">
+                    <input zippy="addmaterials" type="submit" value="Добавить комплектующие для модели" class="note-btn"
+                           style="border: none; color: #007bff; padding: 0;"/>
+                </div>
+                <div class="form-group">
+                    <textarea zippy="editmaterial" class="form-control" readonly="readonly"></textarea>
+                </div>
+                <div class="form-group">
                     <a zippy="addworks">Добавить список работ</a>
                 </div>
                 <div class="form-group">
                     <textarea zippy="editcomment" class="form-control" readonly="readonly"></textarea>
                 </div>
-                <!--<div class="form-group">-->
-                    <!--<a zippy="addmaterials">Добавить комплектующие для модели</a>-->
-                <!--</div>-->
-                <div class="form-group">
-                    <input zippy="addmaterials" type="submit" value="Добавить комплектующие для модели" class="note-btn"/>
-                </div>
-                <div class="form-group">
-                    <textarea zippy="editmaterial" class="form-control" readonly="readonly"></textarea>
-                </div>
+
                 <div class="form-group">
                     <input zippy="saveModel" type="submit" value="Сохранить1" class="btn btn-outline-primary">
                     <input zippy="cancelModel" type="submit" value="Отменить1" class="btn btn-outline-primary"/>
@@ -108,40 +145,6 @@
         </div>
     </form>
 
-    <!--<div class="col-12" zippy="itemtable">-->
-        <form zippy="listMaterialForm">
-             <div class="row">
-                 <div class="col-8">
-                     <div class="form-group">
-                         <table class="table table-borderless table-striped">
-                             <tr>
-                                 <th>Материалы</th>
-                                 <th>Количество</th>
-                                 <th>Изображение</th>
-                             </tr>
-                             <tr zippy="listmaterial">
-                                 <td><span zippy="typeMaterial"></span></td>
-                                 <td><input zippy="quantity" type="number"/></td>
-                                 <!--<td><a  zippy="edit"><i class="fa fa-edit"></i></a> </td>-->
-                                 {{#useimages}}
-                                 <td>
-                                     <a zippy="imagelistitem" data-type="image" data-toggle="lightbox">
-                                         <img style="float:left; width:30px">
-                                     </a>
-                                 </td>
-                                 {{/useimages}}
-                             </tr>
-                         </table>
-                         <div zippy="pag"></div>
-                     </div>
-                     <div class="form-group">
-                         <input zippy="saveMaterial" type="submit" value="Сохранить" class="btn btn-outline-primary">
-                         <input zippy="cancelMaterial" type="submit" value="Отменить" class="btn btn-outline-primary"/>
-                     </div>
-                 </div>
-             </div>
-        </form>
-    <!--</div>-->
     <script>
       $(document).ready(function () {
         console.log('script running...');
