@@ -25,7 +25,9 @@ class MasterPage extends \App\Pages\Base
 {
     public $pasport_id;
     public $employee_name;
+    public $emp_id;
     public $current_work;
+    public $current_work_id;
     public $listWorkEmployees = [];
     public $list_model = [];
     public $list_size = [];
@@ -41,7 +43,7 @@ class MasterPage extends \App\Pages\Base
         $userlogin = $_SESSION['userlogin'];
 
         $conn = \ZDB\DB::getConnect();
-        $sql = "SELECT employee_id, emp_name FROM employees e WHERE e.login = " . "'" . $userlogin . "'";
+        $sql = "SELECT employee_id, emp_name FROM employees e WHERE e.disabled=false AND e.login = " . "'" . $userlogin . "'";
         $rs = $conn->Execute($sql);
 //        print_r($rs->fields);
 
@@ -53,31 +55,42 @@ class MasterPage extends \App\Pages\Base
         $emp_id = $rs->fields['employee_id'];
         $emp_name = $rs->fields['emp_name'];
         $this->employee_name = $emp_name;
-        
-        $query = "SELECT CONCAT(p.name, ', ', p.size) as name, p.comment, t.pasport_id, t.type_work, m.typework_id, m.detail, m.id as master_id, m.made_work 
-                  FROM masters m, typework t, model md, pasport p 
-                  WHERE m.emp_id = " . $emp_id. " AND t.id = m.typework_id 
-                  AND md.pasport_id = t.pasport_id AND md.in_work = true AND p.id = md.pasport_id AND t.finished = false";
+        $this->emp_id = $emp_id;
+
+//        $query = "SELECT p.id as pasport_id, CONCAT(p.name, ', ', p.size) as name, p.comment, k.work as type_work,
+//                  m.typework_id, m.detail, m.id as master_id, k.price, k.id as work_id, m.emp_id
+//                  FROM masters m, kindworks k, model md, pasport p
+//                  WHERE m.emp_id = " . $emp_id. " AND k.id = m.typework_id AND md.in_work = true AND p.id = md.pasport_id AND m.finished = false";
+
+
+        $query = "SELECT pmm.id as pasport_id, pmm.name, pmm.size, pmm.comment, pmm.masters_id, pmm.typework_id as work_id, pmm.detail, k.work as type_work 
+                  FROM (SELECT pm.id, pm.name, pm.size, pm.comment, pm.masters_id, m.typework_id, m.detail 
+                  FROM (SELECT p.id, p.name, p.size, p.comment, md.id as masters_id 
+                  FROM pasport p, model md WHERE p.id = md.pasport_id AND md.in_work = true AND md.finished = false) as pm 
+                  LEFT JOIN masters m ON m.pasport_id=pm.id and m.emp_id='{$emp_id}') as pmm, kindworks k WHERE pmm.typework_id = k.id";
+
         $rs = $conn->Execute($query);
         $type_works = [];
         foreach ($rs as $r){
             $pid = $r['pasport_id'];
             $fnd = false;
-            foreach ($this->listWorkEmployees as $employee){
-                if($employee->getID() == $pid){
+
+            foreach ($this->listWorkEmployees as $employee) {
+                if ($employee->getID() == $pid) {
                     $employee->typework[$r['type_work']] = $r['detail'];
                     $employee->master_id[$r['type_work']] = $r['master_id'];
-                    $employee->made_work[$r['type_work']] = $r['made_work'];
+                    $employee->made_work[$r['type_work']] = $r['detail'];
                     $fnd = true;
                 }
             }
-            if($fnd == false){
+            if ($fnd == false) {
                 $this->listWorkEmployees[] = new WorksMaster($r['pasport_id'], $r['name'], $r['type_work'],
-                    $r['detail'], $r['comment'], $r['master_id'], $r['made_work']);
+                    $r['detail'], $r['comment'], $r['master_id'], $r['detail']);
             }
-            if(in_array($r['type_work'], $type_works) == false){
-                $type_works[] = $r['type_work'];
+            if (in_array($r['type_work'], $type_works) == false) {
+                $type_works[$r['work_id']] = $r['type_work'];
             }
+
         }
 
         $this->add(new Label('message'));
@@ -91,6 +104,7 @@ class MasterPage extends \App\Pages\Base
         }
 
         $this->add(new Form('masterForm'));
+        ksort($type_works);
         $this->masterForm->add(new DropDownChoice('workTypeMaster', $type_works))->onChange($this, 'workTypeMasterOnChange');
 
         $this->add(new Panel('panelModelMaster'));
@@ -163,6 +177,7 @@ class MasterPage extends \App\Pages\Base
         $opt = $this->masterForm->workTypeMaster;
         $select = $opt->getOptionList();
         $work = $select[$type];
+        $this->current_work_id = $type;
         $this->current_work = $work;
         $this->pasport_id = $item->getID();
         
@@ -171,16 +186,35 @@ class MasterPage extends \App\Pages\Base
         $res = preg_match_all('/\<size\>([0-9]+)\<\/size\>\<quantity\>([0-9]+)\<\/quantity\>/i',$item->quantity,$all_size);
         $res = preg_match_all('/\<size\>([0-9]+)\<\/size\>\<quantity\>([0-9]+)\<\/quantity\>/i',$detail,$all_master);
 
+        $conn = \ZDB\DB::getConnect();
+
+        $sql = "SELECT m.detail FROM masters m, kindworks k 
+                WHERE m.typework_id = k.id AND m.pasport_id = '{$this->pasport_id}' AND m.emp_id != '{$this->emp_id}' AND k.work = '{$this->current_work}' " ;
+
+        $rs = $conn->Execute($sql);
+        $other_masters = [];
+        foreach ($rs as $r){
+            $other_master = [];
+            preg_match_all('/\<size\>([0-9]+)\<\/size\>\<quantity\>([0-9]+)\<\/quantity\>/i',$r['detail'],$other_master);
+            if(count($other_masters) == 0){
+                $other_masters[0] = $other_master[2];
+            }else{
+                for($n = 0; $n < count($other_masters[0]); $n++){
+                    $other_masters[0][$n] += $other_master[2][$n];
+                }
+            }
+        }
+
         array_shift($all_size);
         array_shift($all_master);
         array_shift($all_master);
-        $size_master = array_merge($all_size, $all_master);
+        $size_master = array_merge($all_size, $all_master, $other_masters);
 
 
         $this->list_size = [];
 
         for($i = 0; $i < count($size_master[0]); $i++){
-            $this->list_size[] = new WorksSize($i+1, $size_master[0][$i], $size_master[1][$i], $size_master[2][$i]);
+            $this->list_size[] = new WorksSize($i+1, $size_master[0][$i], $size_master[1][$i], $size_master[1][$i]-$size_master[2][$i]-$size_master[3][$i]);
         }
         $this->tableWorkForm->listWorkModelMaster->Reload();
         $this->modelNameSize->setText($item->model);
@@ -221,35 +255,35 @@ class MasterPage extends \App\Pages\Base
                 if($emp->getID() == $this->pasport_id){
                     $detail = $emp->typework[$this->current_work];
                     $master_id = $emp->master_id[$this->current_work];
-                    $made_work = $emp->made_work[$this->current_work];
+//                    $made_work = $emp->made_work[$this->current_work];
                     break;
                 }
             }
 
             $res1 = preg_match_all('/\<size\>([0-9]+)\<\/size\>\<quantity\>([0-9]+)\<\/quantity\>/i',$detail,$match1);
             $res2 = preg_match('/\<master\>.*?\<\/work\>/i',$detail,$match2);
-            $res3 = preg_match_all('/\<size\>([0-9]+)\<\/size\>\<done\>([0-9]+)\<\/done\>/i',$made_work,$match3);
+//            $res3 = preg_match_all('/\<size\>([0-9]+)\<\/size\>\<done\>([0-9]+)\<\/done\>/i',$made_work,$match3);
             $drr = [];
             for($i = 0; $i < count($match1[1]); $i++){
                 $drr[$match1[1][$i]] = $match1[2][$i];
             }
             $write_detail = "";
             foreach ($drr as $k=>$v){
-                $sum = intval($v) - intval($arr[$k]);
+                $sum = intval($v) + intval($arr[$k]);
                 $write_detail .= "<size>" . $k . "</size>" . "<quantity>" . $sum . "</quantity>";
             }
 
-            $str_upd_made = "";
-            $done_works = array_combine($match3[1], $match3[2]);
-            foreach ($done_works as $dk=>$dv){
-                if(array_key_exists($dk, $arr) == true){
-                    $sum_works = intval($done_works[$dk]) + intval($arr[$dk]);
-                    $str_upd_made .= "<size>" . $dk . "</size>" . "<done>" . $sum_works . "</done>";
-                }
-            }
+//            $str_upd_made = "";
+//            $done_works = array_combine($match3[1], $match3[2]);
+//            foreach ($done_works as $dk=>$dv){
+//                if(array_key_exists($dk, $arr) == true){
+//                    $sum_works = intval($done_works[$dk]) + intval($arr[$dk]);
+//                    $str_upd_made .= "<size>" . $dk . "</size>" . "<done>" . $sum_works . "</done>";
+//                }
+//            }
 
             $full_detail = $match2[0] . $write_detail;
-            $sql = "UPDATE masters SET detail = '{$full_detail}', made_work = '{$str_upd_made}' WHERE id = '{$master_id}'";
+            $sql = "UPDATE masters SET detail = '{$full_detail}' WHERE id = '{$master_id}'";
             $rs = $conn->Execute($sql);
 
             $send_txt = $this->current_work . ", количество работ изменено";
@@ -282,6 +316,8 @@ class MasterPage extends \App\Pages\Base
         if($sender->id == "saveDefectModel"){
             $listDefectModel = $this->defectForm->listDefectModel->getChildComponents();
             $work = $this->current_work;
+            $work_id = $this->current_work_id;
+            $emp_id = $this->emp_id;
             $size_defect = "";
             $text = "Описание: ";
 
@@ -308,7 +344,8 @@ class MasterPage extends \App\Pages\Base
             $defectInfo = $this->defectForm->defectInfo->getText();
             if($isSelect == true){
                 $detail = "<master>" . $this->employee_name . "</master>" .
-                    "<work>" . $work . "</work>" . "<size>" . $size_defect . "</size>" . "<defect>" . $text . "</defect>";
+                    "<work>" . $work . "</work>" . "<size>" . $size_defect . "</size>" .
+                    "<work_id>" . $work_id . "</work_id>" . "<emp_id>" . $emp_id . "</emp_id>" . "<defect>" . $text . "</defect>";
                 $conn = \ZDB\DB::getConnect();
                 $sql = "SELECT id as model_id FROM model WHERE pasport_id = " . $this->pasport_id;
                 $rs = $conn->Execute($sql);
@@ -319,6 +356,8 @@ class MasterPage extends \App\Pages\Base
                 $date = date("Y-m-d H:i:s");
                 $sql = "INSERT INTO defect_model(model_id, monitor, detail, created) VALUES(" . "'" . $model_id . "'" .
                     "," . "'" . $defectInfo . "'" . "," . "'" . $detail . "'" . "," . "'" . $date . "'" . ")";
+//                $sql = "INSERT INTO defect_model(model_id, monitor, detail, created)
+//                        VALUES()";
                 $res = $conn->Execute($sql);
             }
         }
@@ -444,3 +483,10 @@ class WorksSize implements \Zippy\Interfaces\DataItem
 /*
  * SELECT m.id, m.detail, t.type_work, m.finished FROM masters m, typework t, model md, pasport p WHERE m.emp_id = 4 AND t.id = m.typework_id AND md.pasport_id = t.pasport_id AND md.in_work = true AND p.id = md.pasport_id AND m.finished = false
  * */
+/*
+ *select m.id,m.pasport_id, m.typework_id,m.emp_id,m.detail FROM masters m WHERE m.emp_id = 4
+ *
+ * SELECT p.id, p.name, p. size, m.typework_id, m.emp_id, m.detail from pasport p, model md
+ * LEFT JOIN masters m ON p.id = m.pasport_id AND m.emp_id=4 AND md.in_work = true
+
+ */

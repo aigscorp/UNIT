@@ -139,7 +139,7 @@ class ProviderData implements \Zippy\Interfaces\DataSource
         $this->page = $page;
         $sql = "SELECT it.item_id, it.itemname, it.msr, it.minqty as min_amount, ss.partion as price, ss.qty as qty_store 
                 FROM items it, store_stock ss 
-                WHERE it.item_id = ss.item_id ORDER BY 2";
+                WHERE it.item_id = ss.item_id AND it.disabled = false ORDER BY 2";
         $conn = \ZDB\DB::getConnect();
         $rs = $conn->Execute($sql);
         foreach ($rs as $r){

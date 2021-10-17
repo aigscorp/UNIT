@@ -3,49 +3,56 @@
     <script src="../../assets/js/sender.js"></script>
 </head>
 <body>
-    <div class="row">
-        <div zippy="widgetMenu"></div>
-    </div>
-    <div class="row">
-        <div class="col-9">
-            <form zippy="totalWorkForm">
-                <p class="h5" style="padding: 5px 0;font-weight: 600;">Общее количество работ</p>
-                <a zippy="prev" class="btn btn-primary">Пред</a>
-                <a zippy="next" class="btn btn-primary">След</a>
-
-                <div class="form-group">
-                    <div zippy="tableModelComponent"></div>
-                </div>
-                <p class="h5" style="padding: 5px 0;font-weight: 600;">Список сотрудников в работе данной модели</p>
-                <div class="form-group">
-                    <div zippy="tableMasterComponent"></div>
-                </div>
-                <div class="form-group">
-                    <div zippy="tableTotalComponent"></div>
-                </div>
-            </form>
+<div class="row">
+    <div zippy="widgetMenu"></div>
+</div>
+<div class="row">
+    <form zippy="modelWorkSelect" class="col-6 col-md-8 col-lg-4">
+        <div class="form-group">
+            <label for="selectModel" class="h4">Выбор модели</label>
+            <select zippy="selectModel"  class="form-control" >
+                <option value="0">Не выбран</option>
+            </select>
         </div>
-
-        <div class="col-3">
-            <form zippy="panelMonitor">
-                <div class="card">
-                    <div class="card-header">
-                        Монитор происшествий
-                    </div>
-                    <div class="card-body" style="height: 200px; overflow-y: scroll;">
-                        <p class="card-text">
-
-                        </p>
-                    </div>
-                </div>
-                <div class="row my-2">
-                    <button class="btn btn-primary">Производство данной модели выполнено</button>
-                </div>
-                <div class="row">
-                    <button zippy="finishProduction" class="btn btn-primary">Завершить производство</button>
-                </div>
-            </form>
-        </div>
+    </form>
+</div>
+<div class="row">
+    <div class="col-9">
+        <form zippy="totalWorkForm" id="totalWorkForm">
+            <!--<p class="h5" style="padding: 5px 0;font-weight: 600;">Общее количество работ</p>-->
+            <div class="form-group">
+                <div zippy="tableModelComponent"></div>
+            </div>
+<!--            <p class="h5" style="padding: 5px 0;font-weight: 600;">Список сотрудников в работе данной модели</p>-->
+            <div class="form-group">
+                <div zippy="tableMasterComponent"></div>
+            </div>
+            <div class="form-group">
+                <div zippy="tableTotalComponent"></div>
+            </div>
+        </form>
     </div>
+
+    <div class="col-3">
+        <form zippy="panelMonitor">
+            <div class="card">
+                <div class="card-header">
+                    Монитор происшествий
+                </div>
+                <div class="card-body" style="height: 200px; overflow-y: scroll;">
+                    <p class="card-text">
+
+                    </p>
+                </div>
+            </div>
+            <div class="row my-2">
+                <button zippy="doneProduction" class="btn btn-primary">Производство данной модели выполнено</button>
+            </div>
+            <div class="row">
+                <button zippy="finishProduction" class="btn btn-primary">Завершить производство</button>
+            </div>
+        </form>
+    </div>
+</div>
 </body>
 </html>

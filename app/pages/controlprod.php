@@ -1,316 +1,309 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: home
- * Date: 24.08.2021
- * Time: 20:30
- */
 
 namespace App\Pages;
 
 use Zippy\Html\Form\Form;
 use Zippy\Html\Form\SubmitButton;
-use Zippy\Html\Form\TextArea;
 use \Zippy\Html\Link\ClickLink;
 use \Zippy\Html\Panel;
 use \Zippy\Html\Label;
 use \Zippy\Html\DataList\DataView;
-use \Zippy\Html\DataList\ArrayDataSource;
-use \Zippy\Html\Form\TextInput;
 use \Zippy\Html\Form\DropDownChoice;
 use \Zippy\Html\Link\SubmitLink;
 
 class ControlProd extends \App\Pages\Base
 {
-    public $count = 0;
-    public $modelWork = [];
-    public $total = 0;
-    public $list_works = [];
-    public $masters = [];
-    public $list_masters = [];
-    public $list_defect = [];
-    public $list_total_work = [];
+    public $modelWorks = [];
+    public $models = [];
+    public $pasportID = "";
+//    public $total = 0;
+//    public $list_works = [];
 
-//    SELECT p.id as pasport_id, m.id, d.detail FROM defect_model d, model m, pasport p WHERE m.in_work = true AND m.id = d.model_id AND m.finished = false AND d.status = false AND p.id = m.pasport_id
 
     public function __construct($params = null)
     {
         parent::__construct($params);
         $conn = \ZDB\DB::getConnect();
-        $sql = "SELECT p.id, p.name, t.type_work, m.id as model_id FROM pasport p, model m, typework t 
-                WHERE m.in_work = true and p.id = m.pasport_id and t.pasport_id = p.id and m.finished = false";
+
+        $sql = "SELECT p.id as pasport_id, m.id as model_id, p.name, p.size, p.comment as detail, p.quantity as qty
+                FROM pasport p, model m WHERE m.in_work = true AND m.pasport_id = p.id AND m.finished = false";
         $rs = $conn->Execute($sql);
 
-        $brr = [];
+        $model_list = [];
         foreach ($rs as $r){
-            $id = $r['id'];
-            if(count($brr) != 0){
-                $fnd = false;
-                for($k = 0; $k < count($brr); $k++){
-                    if($brr[$k] == $id){
-                        $fnd = true;
-                        break;
-                    }
-                }
-                if($fnd == false) $brr[] = $id;
-            }else{
-                $brr[] = $r['id'];
-            }
-            $this->modelWork[] = new ListModelWork($r['id'], $r['name'], $r['type_work'], $r['model_id']);
-        }
-//        <master>Арсен</master><work>Кройка</work><size>40</size><defect>Описание: Брак на коже. Моя вина. </defect>
-        sort($brr);
-        $sql_defect = "SELECT m.id, d.detail, m.pasport_id FROM defect_model d, model m 
-                       WHERE m.in_work = true AND m.id = d.model_id AND m.finished = false AND d.status = false";
-        $res = $conn->Execute($sql_defect);
-
-        $tags = ["master","work","size"];
-        foreach ($res as $r){
-            $obj_defect = new \stdClass();
-            $obj_defect->model_id = $r['id'];
-            $obj_defect->pasport_id = $r['pasport_id'];
-            for($i = 0; $i < count($tags); $i++){
-                $elem = $tags[$i];
-                $tag = $this->parseTagValue($r['detail'], $tags[$i]);
-                $obj_defect->$elem = $tag;
-            }
-            $this->list_defect[] = $obj_defect;
-        }
-
-
-        $str_id = implode("','", $brr);
-        $sql = "SELECT id, comment FROM pasport p WHERE p.id IN('{$str_id}')";
-        $rs = $conn->Execute($sql);
-        $total_size = [];
-        foreach ($rs as $r){
-            $total_size[$r['id']] = $r['comment'];
-        }
-
-        $res_master = $this->getMastersWork($brr, $total_size);
-
-        for($i = 0; $i < count($brr); $i++){
-            $id = $brr[$i];
-//            $sql = "SELECT id, comment FROM pasport p WHERE p.id = " . $id;
-//            $rs = $conn->Execute($sql);
-            $detail = $total_size[$id]; // 'comment';
-            if($detail == "") continue;
-            if(str_ends_with($detail, ",") == true){
-                $detail = substr($detail, 0, -1);
-            }
-
-            $crr = explode(",", $detail);
             $matches = [];
-            $frr = [];
-
-            for($j = 0; $j < count($crr); $j++){
-                $pm = preg_match('/\<size\>([0-9]+)\<\/size\>\<quantity\>([0-9]+)\<\/quantity\>/i', $crr[$j], $matches);
-                if($pm == true){
-                    $frr[$matches[1]] = $matches[2];
-                }
+            $res = preg_match_all('/\<size\>([0-9]+)\<\/size\>\<quantity\>([0-9]+)\<\/quantity\>,/i', $r['detail'], $matches);
+            $sizes = [];
+            if($res == true){
+                $sizes = array_combine($matches[1], $matches[2]);
             }
-//            $this->list_total_work = $frr;
-            $trr = [];
-            $hrr = ["Модель"];
-            $modelName = "";
-            $model_ID = null;
-            foreach ($this->modelWork as $mw){
-                if($mw->getID() == $id){
-                    $hrr[] = $mw->typework;
-                    $modelName = $mw->model;
-                    $model_ID = $mw->getModelID();
-                }
-            }
-            $trr[] = $hrr;
-            foreach ($this->list_masters as $list_master){
-                if($list_master->pasport_id == $id){
-//                    array_shift($hrr);
-                    $hrr[0] = "Мастер ФИО";
-                    $list_master->list_typework = $hrr;
-                    break;
-                }
-            }
-
-            foreach ($frr as $key=>$val){
-                $vrr = [];
-                $vrr[] = $modelName . ", " . $key;
-                for($k = 0; $k < count($hrr)-1; $k++){
-                    $vrr[] = $val;
-                }
-                $trr[] = $vrr;
-            }
-
-            $tbl = new \stdClass();
-            $tbl->id = $id;
-            $tbl->elems = $trr;
-            $tbl->count = $i;
-            $tbl->model_id = $model_ID;
-            foreach ($this->list_defect as $defect){
-                if($model_ID == $defect->model_id){
-                    $tbl->defect[] = $defect;
-                }
-            }
-            $this->list_works[] = $tbl;
+            $this->models[] = new ModelWork($r['pasport_id'], $r['model_id'], $r['name'], $sizes,  $r['qty']);
+            $model_list[$r['model_id']] = $r['name'] . ", " . $r['size'];
         }
-
-
 
         $this->add(new \App\Widgets\MenuProduction('widgetMenu', $this, ''))->setVisible(true);
+        $this->add(new Form('modelWorkSelect'));
+        $this->modelWorkSelect->add(new DropDownChoice('selectModel'))->onChange($this, 'selectModelOnChange');
+        $this->modelWorkSelect->selectModel->setOptionList($model_list);
 
         $this->add(new Form('totalWorkForm'));
         $this->add(new Form('panelMonitor'));
-        if($res_master == false){
-            $this->totalWorkForm->setVisible(false);
-            $this->panelMonitor->setVisible(false);
-        }
+        $this->panelMonitor->add(new SubmitLink('doneProduction'))->onClick($this, 'doneProductionOnClick');
         $this->panelMonitor->add(new SubmitLink('finishProduction'))->onClick($this, 'finishProductionOnClick', true); //заменить на SubmitButton
 
         $this->add(new ComponentProd('tableModelComponent'));//->onClick($this, 'testOnClick');
-        $this->add(new ComponentMaster('tableMasterComponent'));
-        $this->add(new ComponentTotal('tableTotalComponent'));
 
-        $this->add(new ClickLink('next'))->onClick($this, 'nextModelOnClick');
-        $this->add(new ClickLink('prev'))->onClick($this, 'prevModelOnClick');
-
-
-        $this->tableModelComponent->setValue($this->list_works[$this->count]);
-        $this->tableMasterComponent->setValue($this->list_masters[$this->count]);
-        $this->tableTotalComponent->setValue($this->list_total_work[$this->count]);
     }
 
-    public function getMastersWork(array $arr, array $total)
-    {
-        if(count($arr) == 0) return false;
+    public function getModelDefect($pid){
+        $conn = \ZDB\DB::getConnect();
 
-        $param = implode(",", $arr);
+        $sql = "SELECT m.id, d.detail FROM defect_model d, model m, pasport p 
+                WHERE d.status = false AND m.in_work = true AND m.finished = false 
+                AND m.pasport_id = '{$pid}' AND p.id=m.pasport_id AND d.model_id=m.id";
+        $rs = $conn->Execute($sql);
 
-        $sql = "SELECT wrk.mid as mid, wrk.id, wrk.emp_id, e.emp_name, wrk.type_work, wrk.detail, wrk.name, wrk.init_quantity as init  
-                FROM employees e, (SELECT tmp.name, tmp.type_work, m.id as mid, m.emp_id, tmp.id, m.detail, m.init_quantity 
-                FROM masters m, ((SELECT pp.id, t.id as tid, t.type_work, pp.name 
-                FROM typework t, (SELECT p.id,p.name FROM pasport p WHERE p.id IN(" .$param . ")) as pp 
-                WHERE t.pasport_id = pp.id)) AS tmp WHERE m.typework_id = tmp.tid) AS wrk WHERE e.employee_id = wrk.emp_id";
+        $defects = [];
+        foreach ($rs as $r){
+            $model_defect = new \stdClass();
+            $model_defect->model_id = $r['id'];
+            $detail = $r['detail'];
+            $pattern = '/\<master\>([а-яА-ЯЁёa-zA-Z0-9 ()-.,]+)\<\/master\>\<work\>([а-яА-ЯЁёa-zA-Z0-9 ()-.,]+)\<\/work\>\<size\>([0-9 ]+)\<\/size\>\<work_id\>([0-9 ]+)\<\/work_id\>\<emp_id\>([0-9 ]+)\<\/emp_id\>/u';
+//            $pattern = '/\<work\>([а-яА-ЯЁёa-zA-Z0-9 ()-.,]+)\<\/work\>\<size\>([0-9 ]+)\<\/size\>\<work_id\>([0-9 ]+)\<\/work_id\>\<emp_id\>([0-9 ]+)\<\/emp_id\>/u';
+            $res = preg_match($pattern, $detail, $match);
+            $model_defect->emp_name = $match[1];
+            $model_defect->work = $match[2];
+            $model_defect->size = $match[3];
+            $model_defect->work_id = $match[4];
+            $model_defect->emp_id = $match[5];
+            $defects[] = $model_defect;
+        }
+        return $defects;
+    }
+
+    public function getModelWorks($pid, $area = true){
+        $this->pasportID = $pid;
+        $pasport_id = $pid;
+        $list_defects = $this->getModelDefect($pasport_id);
+
+        if($area == true){
+            $sql = "SELECT m.id, m.typework_id, m.emp_id, m.detail, e.emp_name, k.work, k.parealist_id, p.pa_name as area_name 
+                    FROM masters m, employees e, kindworks k, parealist p 
+                WHERE k.parealist_id = p.pa_id AND e.employee_id = m.emp_id AND k.id = m.typework_id AND m.pasport_id = " . $pasport_id;
+        }else{
+            $sql = "SELECT m.id, m.typework_id, m.emp_id, m.detail, e.emp_name, k.work FROM masters m, employees e, kindworks k 
+                WHERE e.employee_id = m.emp_id AND k.id = m.typework_id AND m.pasport_id = " . $pasport_id;
+        }
 
         $conn = \ZDB\DB::getConnect();
         $rs = $conn->Execute($sql);
-        foreach ($rs as $r){
-            $this->masters[] = new ListMastersWork($r['mid'], $r['id'], $r['emp_id'], $r['emp_name'],
-                                                   $r['type_work'], $r['detail'], $r['name'], $r['init']);
+        foreach ($this->models as $model){
+            if($model->pasport_id == $pid){
+                $total_sizes = $model->size;
+                $model_name = $model->name;
+                $model_id = $model->model_id;
+                $model_qty = intval($model->quantity);
+                break;
+            }
         }
 
-        for($i = 0, $k = 0; $i < count($arr); $i++, $k++){
-            $prr = [];
+        $list_work_emp = [];
+        $area_names = [];
+        foreach ($rs as $r){
+            $matches = [];
+            $res = preg_match_all('/\<size\>([0-9]+)\<\/size\>\<quantity\>([0-9]+)\<\/quantity\>/i', $r['detail'], $matches);
+            $size_qty = [];
+            if($res != false){
+                $size_qty = array_combine($matches[1], $matches[2]);
+            }
+            $typeid = intval($r['typework_id']);
+            $empid = intval($r['emp_id']);
+            $area_id = $area == true ? intval($r['parealist_id']) : 0;
+            $txt_area_name = "";
+            if($area == true) $txt_area_name = $r['area_name'];
+            $list_work_emp[] = new ListMastersWork(intval($r['id']), intval($typeid), intval($empid),
+                $size_qty, $r['emp_name'], $r['work'], intval($area_id), $txt_area_name);
 
-            foreach ($this->masters as $master){
-                if($arr[$i] == $master->pasport_id){
-                    $str_total = $total[$arr[$i]];
+            if(array_key_exists($area_id, $area_names) == false){
+                $area_names[$area_id] = $r['area_name'];
+            }
+        }
+        $this->modelWorks = $list_work_emp;
 
-                    $tmp = new \stdClass();
-                    $fnd = false;
-                    foreach($prr as $pr){
-                        if($pr->emp_id == $master->emp_id){
-                            //$this->parseTag($str_total, "quantity")
-                            $pr->typework[$master->typework] = intval($master->init_quantity) - $this->parseTag($master->detail, "quantity");
-                            $fnd = true;
+        ksort($area_names);
+
+        ListMastersWork::sortByEmpID($list_work_emp, 'area_id');
+        $modelTableSize = new \stdClass();
+        $modelTableSize->model_id = $model_id;
+        $modelTableSize->list_work_size = [];
+        $modelTableSize->list_emp_work = [];
+        $modelTableSize->list_work_defect = [];
+        $modelTableSize->list_emp_defect = [];
+        $modelTableSize->list_total_work = [];
+
+        foreach ($area_names as $a_key=>$v_key){
+            $modelArea = new \stdClass();
+            $modelArea->area_id = $a_key;
+            $modelArea->area_name = $v_key;
+            $works = ListMastersWork::getWorkNameByAreaID($list_work_emp, $a_key);
+            $modelArea->works[] = $works;
+            $count_work = count($modelArea->works[0]) - 1;
+            foreach ($total_sizes as $kts=>$vts){
+                $trr = [];
+                $trr[] = $model_name . ", " . $kts;
+                $trr1 = array_fill(1, $count_work, $vts);
+                $res_trr = array_merge($trr, $trr1);
+                $modelArea->works[] = $res_trr;
+            }
+            $modelTableSize->list_work_size[] = $modelArea;
+            $modelAreaEmp = new \stdClass();
+            $modelAreaEmp->area_id = $a_key;
+            $modelAreaEmp->area_name = $v_key;
+            $modelAreaEmp->emps = ListMastersWork::getEmpNameByAreaID($list_work_emp, $works, $a_key);
+            $modelTableSize->list_emp_work[] = $modelAreaEmp;
+
+            $modelWorkDefect = new \stdClass();
+            $modelWorkDefect->emp_id = [];
+            $modelWorkDefect->work_id = [];
+            $modelWorkDefect->size = [];
+            $modelWorkDefect->defects = [];
+
+            $modelEmpDefect = new \stdClass();
+            $modelEmpDefect->emp_id = [];
+            $modelEmpDefect->work_id = [];
+            $modelEmpDefect->size = [];
+            $modelEmpDefect->defects = [];
+
+            foreach ($list_defects as $ls){
+                $wn = $ls->work;
+                for($j = 1; $j < count($works); $j++){
+                    if($works[$j] == $wn){
+                        $y = $j;
+                        $size = $ls->size;
+                        for($k = 1; $k < count($modelArea->works); $k++){
+                            $arr_sz = explode(",", $modelArea->works[$k][0]);
+                            if(trim($arr_sz[1]) == $size){
+                                $x = $k;
+                                $modelWorkDefect->defects[] = [$x, $y];
+                                $modelWorkDefect->work_id[] = $ls->work_id;
+                                $modelWorkDefect->size[] = $size;
+                                $modelWorkDefect->emp_id[] = $ls->emp_id;
+                                break;
+                            }
+                        }
+                        for($n = 1; $n < count($modelAreaEmp->emps); $n++){
+                            if($modelAreaEmp->emps[$n][0] == $ls->emp_name){
+                                $ex = $n;
+                                $modelEmpDefect->defects[] = [$ex, $y];
+                                $modelEmpDefect->work_id[] = $ls->work_id;
+                                $modelEmpDefect->size[] = $size;
+                                $modelEmpDefect->emp_id[] = $ls->emp_id;
+                                break;
+                            }
                         }
                     }
-                    if($fnd == false){
-                        $tmp->emp_name = $master->emp_name;
-                        $tmp->emp_id = $master->emp_id;
-                        //$this->parseTag($str_total, "quantity")
-                        $tmp->typework[$master->typework] = intval($master->init_quantity) - $this->parseTag($master->detail, "quantity");//$master->typework;
-                        $tmp->model = $master->model;
-                        $prr[] = $tmp;
+                }
+            }
+            $modelTableSize->list_work_defect[] = $modelWorkDefect;
+            $modelTableSize->list_emp_defect[] = $modelEmpDefect;
+            $totals = $modelAreaEmp->emps;
+            $modelTotalWork = new \stdClass();
+            $modelTotalWork->total = [];
+
+            $count_col = count($totals[0]);
+            $t1 = array_fill(0, $count_col, "");
+            $t1[0] = "всего выполнено";
+            $t2 = array_fill(0, $count_col, "");
+            $t2[0] = "нужно выполнить";
+            $tz = $works;
+            $tz[0] = "";
+            for($m = 1; $m < $count_col; $m++){
+                $sum = 0;
+                for($p = 1; $p < count($totals); $p++){
+                    $sum += $totals[$p][$m];
+                }
+
+                $t1[$m] = $sum;
+                $t2[$m] = $model_qty - $sum;
+            }
+            $modelTotalWork->total[] = $tz;
+            $modelTotalWork->total[] = $t1;
+            $modelTotalWork->total[] = $t2;
+            $modelTableSize->list_total_work[] = $modelTotalWork;
+        }
+        $this->tableModelComponent->setValue($modelTableSize);
+    }
+
+    public function selectModelOnChange($sender){
+        $value = $this->modelWorkSelect->selectModel->getValue();
+        if($value == 0){
+            $this->tableModelComponent->setValue(null);
+            $this->pasportID = "";
+            return false;
+        }
+        foreach ($this->models as $model){
+            if($model->model_id == $value){
+                $pid = $model->pasport_id;
+                break;
+            }
+        }
+//        $this->getModelWorks($pid, false);
+        $this->getModelWorks($pid);
+
+    }
+
+    public function doneProductionOnClick($sender){
+        $count = $this->count;
+
+
+    }
+    public function finishProductionOnClick($sender){
+        if($this->pasportID == "") return false;
+
+        $sizes = [];
+        foreach ($this->models as $mod){
+            if($mod->pasport_id == $this->pasportID){
+                $sizes = $mod->size;
+                break;
+            }
+        }
+
+        $typeworks = [];
+        foreach ($this->modelWorks as $mw){
+            $work_id = $mw->typework_id;
+            if(array_key_exists($work_id, $typeworks) == false){
+                $typeworks[$work_id] = $mw->size_qty;
+            }else{
+                $sz1 = $mw->size_qty;
+                $sz2 = $typeworks[$work_id];
+                foreach ($sz1 as $k=>$v){
+                    $sz2[$k] += $v;
+                }
+                $typeworks[$work_id] = $sz2;
+            }
+        }
+        foreach ($sizes as $sk=>$sv){
+            foreach ($typeworks as $type){
+                foreach ($type as $tk=>$tv){
+                    if($sk == $tk){
+                        if(intval($sizes[$sk]) > $tv){
+                            $sizes[$sk] = $tv;
+                        }
                     }
                 }
             }
-            $obj_master = new \stdClass();
-            $obj_master->count = $k;
-            $obj_master->pasport_id = $arr[$i];
-            $obj_master->masters = $prr;
-            $this->list_masters[] = $obj_master;
-
-            $list_all_works = [];
-            foreach ($this->modelWork as $mw){
-                if($mw->id == $arr[$i]){
-                    $list_all_works[$mw->typework] = 0;
-                }
-            }
-
-            foreach ($prr as $item_prr){
-                foreach ($item_prr->typework as $key_work=>$val_qty){
-                    $list_all_works[$key_work] += $val_qty;
-                }
-            }
-
-            $total_quantity = $this->parseTag($str_total, "quantity");
-
-            $obj_total = new \stdClass();
-            $obj_total->count = $k;
-            $obj_total->total = $list_all_works;
-            $obj_total->total_qty = $total_quantity;
-
-            $this->list_total_work[] = $obj_total;
         }
 
-        foreach ($this->list_defect as $defect){
-            foreach ($this->list_masters as $master_defect){
-                if($defect->pasport_id == $master_defect->pasport_id){
-                    $master_defect->defect[] = $defect;
-                }else{
-//                    $master_defect->defect = null;
-                }
-            }
-
+        $min = current($sizes);
+        foreach ($sizes as $sz){
+            if($min > $sz) $min = $sz;
         }
+        $modelComplect = $min;
 
-        return true;
+
     }
-
-    public function parseTag($str_tag, $name)
-    {
-        $matches = [];
-        $pattern = "/\<" . $name . "\>" . "([0-9]+)" . "\<\/" . $name . "\>/i";
-        $res = preg_match_all($pattern, $str_tag, $matches);
-        if($res == false){
-            echo "Error parsing " . $name . "<br>";
-        }
-
-        $sum = 0;
-        for($i = 0; $i < count($matches[1]); $i++){
-            $sum += intval($matches[1][$i]);
-        }
-        return $sum;
-    }
-
-    public function parseTagValue($str_tag, $name){
-        $matches = [];
-        $pattern = "/\<" . $name . "\>" . "([а-яА-ЯЁёa-zA-Z0-9]+)" . "\<\/" . $name . "\>/u";
-        $res = preg_match($pattern, $str_tag, $matches);
-        if($res == false){
-            echo "Error parsing " . $name . "<br>";
-        }
-        return $matches[1];
-    }
-
-    public function nextModelOnClick($sender)
-    {
-        $cnt = count($this->list_works);
-        if($cnt-1 > $this->count) $this->count++;
-        $this->tableModelComponent->setValue($this->list_works[$this->count]);
-        $this->tableMasterComponent->setValue($this->list_masters[$this->count]);
-        $this->tableTotalComponent->setValue($this->list_total_work[$this->count]);
-//        $this->updateAjax(array('tableModelComponent'), $this->tableModelComponent->setValue($this->drr[$this->count]));
-    }
-
-    public function prevModelOnClick()
-    {
-        if($this->count > 0) $this->count--;
-        $this->tableModelComponent->setValue($this->list_works[$this->count]);
-        $this->tableMasterComponent->setValue($this->list_masters[$this->count]);
-        $this->tableTotalComponent->setValue($this->list_total_work[$this->count]);
-    }
-
-    public function finishProductionOnClick($sender){
-        $s = $sender;
+    public function finishProductionOnClick_old($sender){
+//        $s = $sender;
         $count = $this->count;
 
         $totalComponent = $this->getComponent('tableTotalComponent');
@@ -349,10 +342,6 @@ class ControlProd extends \App\Pages\Base
         }
 
         $typework_order = array_unique($typework_ids);
-//        $typework_order = [];
-//        foreach ($typework_id_unique as $tiu){
-//            $typework_order[] = $tiu;
-//        }
 
         $list_swd = [];
         foreach ($typework_order as $kto=>$vto){
@@ -376,54 +365,183 @@ class ControlProd extends \App\Pages\Base
         }
 
 
+        $list_sizes_done = [];
+        foreach ($list_swd as $ls){
+            $count_work = [];
+            $sizes_done = [];
+            foreach ($ls->made_work as $mw){
+                $match = [];
+                $res = preg_match_all('/\<size\>([0-9]+)\<\/size\>\<done\>([0-9]+)\<\/done\>/i', $mw, $match);
+                if(count($sizes_done) == 0){
+                    for($k = 0; $k < count($match[1]); $k++){
+                        $sizes_done[$match[1][$k]] = 0;
+                    }
+                }
+                $count_work[] = array_combine($match[1], $match[2]);
+            }
+            for($j = 0; $j < count($count_work); $j++){
+                foreach ($count_work[$j] as $k1=>$v1){
+                    if(array_key_exists($k1, $sizes_done) == true){
+                        $sizes_done[$k1] = intval($sizes_done[$k1]) + intval($v1);
+                    }
+                }
+            }
+//            $ls->size_done = $sizes_done;
+            $list_sizes_done[] = $sizes_done;
+        }
+
+        $srr = [];
+        $keyrr = array_keys($list_sizes_done[0]);
+        for($i = 0; $i < count($keyrr); $i++){
+            $srr[$keyrr[$i]] = min(array_column($list_sizes_done, $keyrr[$i]));
+        }
 
     }
 }
 
-class ListModelWork
+
+class ModelWork
 {
-    public $id;
-    public $model;
-    public $typework;
+    public $pasport_id;
     public $model_id;
+    public $name;
+    public $size;
+    public $quantity;
 
-    public function __construct($id, $model, $typework ,$model_id)
+    public function __construct($pid, $mid, $name, $size, $qty)
     {
-        $this->id = $id;
-        $this->model = $model;
-        $this->typework = $typework;
-        $this->model_id = $model_id;
+        $this->pasport_id = $pid;
+        $this->model_id = $mid;
+        $this->name = $name;
+        $this->size = $size;
+        $this->quantity = $qty;
     }
-
-    public function getID() { return $this->id; }
-    public function getModelID() { return $this->model_id; }
 }
 
 class ListMastersWork
 {
-    public $mid;
-    public $pasport_id;
+    public $id;
     public $emp_id;
-    public $typework;
+    public $typework_id;
     public $emp_name;
-    public $detail;
-    public $model;
-    public $init_quantity;
+    public $size_qty;
+    public $work_name;
+    public $area_id;
+    public $area_name;
 
-    public function __construct($mid, $pasport_id, $emp_id, $emp_name, $typework, $detail, $model, $init)
+    static $sortKey;
+
+    public function __construct($id, $typework_id, $emp_id, $size_qty, $emp_name, $work_name, $area_id=0, $area_name = "")
     {
-        $this->mid = $mid;
-        $this->pasport_id = $pasport_id;
+        $this->id = $id;
+        $this->typework_id = $typework_id;
         $this->emp_id = $emp_id;
+        $this->size_qty = $size_qty;
         $this->emp_name = $emp_name;
-        $this->typework = $typework;
-        $this->detail = $detail;
-        $this->model = $model;
-        $this->init_quantity = $init;
+        $this->work_name = $work_name;
+        $this->area_id = $area_id;
+        $this->area_name = $area_name;
+    }
+    public function getSizeQty(){
+        return $this->size_qty;
+    }
+    public function getWorkName(){
+        return $this->work_name;
     }
 
     public function getID() { return $this->id; }
+
+    static function cmp($a, $b){
+        return $a->{self::$sortKey} - $b->{self::$sortKey};
+    }
+
+    public static function sortByEmpID(&$collection, $prop){
+        self::$sortKey = $prop;
+        usort($collection, array(__CLASS__, 'cmp'));
+    }
+
+    public static function getWorkNameByAreaID($collection, $area_id = 0){
+        $tmp = [];
+        foreach ($collection as $coll){
+            if($coll->area_id == $area_id || $area_id == 0){
+                $tmp[] = $coll->work_name;
+            }
+        }
+        $t = array_unique($tmp);
+        $tmp = [];
+        $tmp[] = "Модель";
+        foreach ($t as $p){
+            $tmp[] = $p;
+        }
+        return $tmp;
+    }
+    public static function getEmpNameByAreaID($collection, $works, $area_id = 0){
+        $tmp = [];
+        $count_work = count($works);
+        $works[0] = "Мастер ФИО";
+        $arr_m = [];
+        $arr_m[] = $works;
+
+        foreach ($collection as $coll){
+            if($area_id == $coll->area_id || $area_id == 0){
+                $ind = 0;
+                for($i = 0; $i < count($works); $i++){
+                    if($works[$i] == $coll->work_name){
+                        $ind = $i;
+                        break;
+                    }
+                }
+
+                $fnd = false;
+                foreach ($arr_m as $k=>$v){
+                    if($k == $coll->emp_id){
+                        $fnd = true;
+                        break;
+                    }
+                }
+                if($fnd == false){
+                    $arr_m[$coll->emp_id] = array_fill(0, $count_work, "");
+                    $arr_m[$coll->emp_id][0] = $coll->emp_name;
+                }
+                $arr_m[$coll->emp_id][$ind] = $coll->sumWork();
+            }
+        }
+
+        foreach ($arr_m as $item){
+            $tmp[] = $item;
+        }
+        return $tmp;
+    }
+
+    public function sumWork(){
+        $sum = 0;
+        foreach ($this->size_qty as $sz){
+            $sum += $sz;
+        }
+        return $sum;
+    }
 }
+
+//class ListModelWork
+//{
+//    public $id;
+//    public $model;
+//    public $typework;
+//    public $model_id;
+//
+//    public function __construct($id, $model, $typework ,$model_id)
+//    {
+//        $this->id = $id;
+//        $this->model = $model;
+//        $this->typework = $typework;
+//        $this->model_id = $model_id;
+//    }
+//
+//    public function getID() { return $this->id; }
+//    public function getModelID() { return $this->model_id; }
+//}
+
+
 
 /*
  * SELECT

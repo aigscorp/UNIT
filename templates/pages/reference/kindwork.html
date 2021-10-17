@@ -1,0 +1,66 @@
+<html>
+<head>
+</head>
+<body>
+    <div class="row">
+        <div zippy="kindworktable" class="col-12 col-md-10 col-lg-8">
+            <h3>Справочник виды работ </h3>
+            <a zippy="addnew" class="btn btn-outline-primary btn-sm">Добавить</a>
+            <table class="table table-hover   table-sm">
+                <tr>
+                    <th>Вид работы</th>
+                    <th>Стоимость</th>
+                    <th>Производственный участок</th>
+
+                    <th></th>
+                </tr>
+                <tr zippy="kindworklist">
+                    <td zippy="work_name"></td>
+                    <td zippy="work_price"></td>
+                    <td zippy="work_shop"></td>
+
+                    <td style="width:52px"><a zippy="edit" title="Редактирование"><i class="fa fa-edit"></i></a> <a
+                            zippy="delete" title="Удалить"><i class="fa fa-trash"></i></a></td>
+                </tr>
+            </table>
+            <div zippy="pag"></div>
+
+        </div>
+
+
+        <div class="col-12 col-md-10  col-lg-8">
+            <form zippy="kindworkdetail">
+                <div class="row">
+                    <div class="col-6">
+                        <div class="form-group">
+                            <label for="kind_name">Вид работы, наименование</label>
+                            <input required="required" zippy="kind_name" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label for="kind_short">Короткое наименование</label>
+                            <input class="form-control" zippy="kind_short"/>
+                        </div>
+                        <div class="form-group">
+                            <label for="kind_shop">Производственный участок, цех</label>
+                            <select class="form-control" zippy="kind_shop">
+                                <option value="0">Не указан</option>
+                            </select>
+
+                        </div>
+                        <div class="form-group">
+                            <label for="kind_price">Стоимость за единицу</label>
+                            <input type="number" class="form-control" zippy="kind_price" min="0"/>
+                        </div>
+
+                        <div class="form-group">
+                            <input zippy="save" type="submit" value="Сохранить" class="btn btn-primary  ">&nbsp;&nbsp;
+                            <input zippy="cancel" type="button" value="Отменить" class="btn btn-light  ">
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+    </div>
+</body>
+</html>

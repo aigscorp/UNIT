@@ -12,8 +12,8 @@ use App\Application as App;
 use App\Entity\Category;
 use App\Entity\Item;
 use App\Entity\ItemSet;
-use App\Helper as H;
 use App\System;
+use App\Helper;
 use function GuzzleHttp\Psr7\str;
 use \Zippy\Html\Form\CheckBox;
 use \Zippy\Html\Form\Form;
@@ -32,7 +32,7 @@ use App\Entity\Event;
 //    global $materials;
 //}
 
-$GLOBALS["material"] = "this is test";
+//$GLOBALS["material"] = "this is test";
 
 class Pasport extends Base
 {
@@ -42,32 +42,45 @@ class Pasport extends Base
     public $str_params = "";
     public $edit = false;
     public $from_pasport_item = [];
-
+    public $item_qty = [];
+    public $_work;
 
     public function __construct($params = null)
     {
         parent::__construct($params);
 
-        $cat = 10;
+//        $cat = 10;
+        session_start();
+
         $conn = \ZDB\DB::getConnect();
-        $sql = "select * from items where items.cat_id = " . $cat;
+        $sql = "select sizer as itemname from sizesrange";
 
         $rs = $conn->Execute($sql);
         foreach ($rs as $r){
             $this->sizes[] = $r['itemname'];
         }
 
-        $cat = 11;
-        $sql = "select * from items where items.cat_id = " . $cat . " ORDER BY itemname";
+//        $cat = 11;
+//        $sql = "select * from items where items.cat_id = " . $cat . " ORDER BY itemname";
+        $sql = "SELECT * FROM kindworks ORDER BY work";
         $rsw = $conn->Execute($sql);
 
         $matches = [];
+
+
         foreach ($rsw as $w){
-            $tmp = $w['detail'];
-            $res = preg_match('/\<zarp\>([0-9]+)\<\/zarp\>/i', $tmp, $matches);
-            $price = 0.00;
-            if($res == true) $price = $matches[1];
-            $this->works[] = new ListWork($w['item_id'], $w['itemname'], $price, false);
+//            $tmp = $w['detail'];
+//            $res = preg_match('/\<zarp\>([0-9]+)\<\/zarp\>/i', $tmp, $matches);
+//            $price = 0.00;
+//            if($res == true) $price = $matches[1];
+//            $this->works[] = new ListWork($w['item_id'], $w['itemname'], $price, false);
+            $this->works[] = new ListWork($w['id'], $w['work'], $w['price'], false);
+        }
+
+        if(isset($_SESSION['kindwork']) == false){
+            foreach ($this->works as $wr){
+                $_SESSION['kindwork'][] = array($wr->id=>$wr->select);
+            }
         }
 
         if($params != null) {
@@ -93,6 +106,19 @@ class Pasport extends Base
             }
 
             $list_mat = explode("|", $txt_material_item);
+            $refactor_list_mat = explode("|,", $txt_material_item);
+            $refactor_array = [];
+            for($j = 0; $j < count($refactor_list_mat); $j++){
+                $match = array();
+                if(strlen(trim($refactor_list_mat[$j])) > 0){
+                    preg_match_all('/<([0-9,.]+)>|\(([0-9,.]+)\)/i', $refactor_list_mat[$j], $match);
+                    $qty = str_replace(["<", ">"], "", $match[0][0]);
+                    $item_id = str_replace(["(", ")"], "", $match[0][1]);
+                    $refactor_array[$item_id] = $qty;
+                }
+            }
+            $this->item_qty = $refactor_array;
+            $refactor_array = [];
             $txt_material = "";
             $txt_item_id = "";
             for ($k = 0; $k < count($list_mat); $k++) {
@@ -164,12 +190,13 @@ class Pasport extends Base
         $this->add(new Form('listWorkForm'))->setVisible(false);
         $this->listWorkForm->add(new DataView('listwork',
             new ArrayDataSource(new \Zippy\Binding\PropertyBinding($this,"works")),$this,'listOnRowWork'))->Reload();
+        $this->listWorkForm->listwork->setPageSize(Helper::getPG());
+        $this->listWorkForm->add(new \Zippy\Html\DataList\Paginator('pag', $this->listWorkForm->listwork));
         $this->listWorkForm->add(new SubmitLink('saveWork'))->onClick($this, 'saveWorkOnClick');
         $this->listWorkForm->add(new SubmitLink('cancelWork'))->onClick($this, 'saveWorkOnClick'); //cancelWorkOnClick
     }
 
-    public function onSize($list_sz="")
-    {
+    public function onSize($list_sz=""){
         $val = $this->pasportForm->size->getValue();
         if($val != -1) {
             $sz = $this->pasportForm->size;
@@ -199,8 +226,7 @@ class Pasport extends Base
         }
         $this->updateAjax(array('size'));
     }
-    public function listSizeModelOnRow($row)
-    {
+    public function listSizeModelOnRow($row){
         $item = $row->getDataItem();
         $text = $this->pasportForm->modelName->getText();
         if(strlen($text) == 0) $text = "Модель";
@@ -220,7 +246,7 @@ class Pasport extends Base
 
         $row->add(new Label('typeWork',$item->work));
         $row->add(new Label('price', $item->price));
-        $row->add(new CheckBox('checkTypeWork'));//->onChange($this, 'checkOnSelect');
+        $row->add(new CheckBox('checkTypeWork', new \Zippy\Binding\PropertyBinding($item, 'select')))->onChange($this, 'checkOnSelect', true);
     }
 
     public function listOnRowMaterial(\Zippy\Html\DataList\DataRow $row)
@@ -273,21 +299,43 @@ class Pasport extends Base
         $items = $sender->getOwner()->getDataItem();
         $chk = $sender->isChecked();
         $id = $items->getID();
-        foreach ($this->works as $work){
-            if($work->getID() == $id){
-                $work->setSelect($chk);
-//                $this->listWorkForm->saveWork->setAttribute("disabled", false);
-                break;
+//        $session_kw = $_SESSION['kindwork'];
+        for($i = 0; $i < count($_SESSION['kindwork']); $i++){
+            if(array_key_exists($id, $_SESSION['kindwork'][$i]) == true){
+                $_SESSION['kindwork'][$i][$id] = $chk;
             }
         }
+//        foreach ($_SESSION['kindwork'] as $sess){
+//            if(array_key_exists($id, $sess) == true){
+//                $sess[$id] = $chk;
+//                break;
+//            }
+//        }
+//        foreach ($this->works as $work){
+//            if($work->getID() == $id){
+//                $work->setSelect($chk);
+////                $this->listWorkForm->saveWork->setAttribute("disabled", false);
+//                break;
+//            }
+//        }
         $this->updateAjax(array('checkTypeWork'));
     }
     public function addWorkOnClick()
     {
+        for($i = 0; $i < count($_SESSION['kindwork']); $i++){
+            foreach ($_SESSION['kindwork'][$i] as $k=>$v){
+                $_SESSION['kindwork'][$i][$k] = false;
+            }
+        }
+        foreach ($this->works as $wrk){
+            $wrk->resetSelect();
+        }
         $this->pasportForm->editcomment->clean();
         $this->listWorkForm->listwork->Reload();
         $this->pasportForm->setVisible(false);
         $this->listWorkForm->setVisible(true);
+
+
     }
 
     public function _str($val) { return "'" . $val . "'"; }
@@ -326,50 +374,34 @@ class Pasport extends Base
 
             $sql = "INSERT INTO pasport(name, size, comment, quantity)
                     VALUES({$this->_str($name_model)}, {$this->_str($size)}, {$this->_str($sizeRange)}, {$this->_str($suite)})";
-//        $sql .= "( " . "'" . $name_model . "', " . "'" . $size . "')";
             $conn->Execute($sql);
             $id_ins = $conn->_insertid();
-//            print_r($id_ins);
 
             foreach ($this->works as $work) {
                 if ($work->getSelect() == true) {
                     $w = $work->getWork();
-                    $detail = "<work>" . $work->getWork() . "</work>";
+                    $detail = "<work>" . $work->getID() . "</work>"; //было $work->getWork()
                     $sql_w = "INSERT INTO pasport_tax(pasport_id, model_item, detail)
                       VALUES({$this->_str($id_ins)}, {$this->_str($w)}, {$this->_str($detail)})";
                     $conn->Execute($sql_w);
                 }
             }
             $tetxarea_material = $this->pasportForm->editmaterial->getText();
-            $par = $this->str_params;
-            $str_material = explode("::", $par);
-            $materials = $str_material[0];
-
+//            $par = $this->str_params;
+//            $str_material = explode("::", $par);
+//            $materials = $str_material[0];
 
             $match = array();
-            preg_match_all('/([а-яА-Яa-zA-Z, ].*?)([0-9()]+),/i',$tetxarea_material, $match);
-            $brr = [];
-            $crr = [];
-            for($j = 0; $j < count($match[0]); $j++){
-                for($i = 1; $i < count($match); $i++){
-                     $brr[] = [$match[$i][$j]];
-                }
-                $crr[] = $brr;
-                $brr = [];
-            }
-
-            for($i = 0; $i < count($crr); $i++){
-                $mm = trim($crr[$i][0][0]);
-                $mrr = explode(",", $mm);
-                $m = trim($mrr[0]);
-                $str_q = $crr[$i][1][0];
-                $q = trim(str_replace(["(", ")"], "", $str_q));
-                $detail = "<material>" . $m . "</material>" . "<quantity>" . $q . "</quantity>";
+            // preg_match_all('/([а-яА-Яa-zA-Z, ].*?)([0-9()]+),/i',$tetxarea_material, $match);
+            preg_match_all('/([а-яА-Яa-zA-Z0-9.,\/ ].*?)<([0-9<>.,]+)>,/i',$tetxarea_material, $match);
+            $crr_materials = array_combine($match[1], $match[2]);
+            foreach($crr_materials as $m=>$q){
+                $detail = "<material>" . trim($m) . "</material>" . "<quantity>" . $q . "</quantity>";
                 $sql_m = "INSERT INTO pasport_tax(pasport_id, model_item, detail, qty_material)
                       VALUES ({$this->_str($id_ins)}, {$this->_str($m)}, {$this->_str($detail)}, true)";
                 $conn->Execute($sql_m);
             }
-            $quan = 0;
+
             //здесь добавить
             $detail = "";
             foreach ($this->from_pasport_item as $fpi){
@@ -384,35 +416,49 @@ class Pasport extends Base
             $this->edit = false;
 
         }
+        if(isset($_SESSION['kindwork']) == true){
+            unset($_SESSION['kindwork']);
+        }
         App::Redirect("\\App\\Pages\\Reference\\PasportList");
     }
 
     public function saveWorkOnClick($sender)
     {
         $id = $sender->id;
-        foreach ($this->works as $work){
-            $work->resetSelect();
-        }
+
         if($id == 'saveWork'){
             $str_works = "";
-            $listworks = $this->listWorkForm->listwork->getChildComponents();
-            foreach ($listworks as $listwork){
-                $childs = $listwork->getChildComponents();
-                foreach ($childs as $k=>$v){
-                    if(str_starts_with($k, "checkTypeWork") == true){
-                        $res = $v->getValue();
-                        $id = $listwork->getDataItem()->getID();
+            $sess = $_SESSION['kindwork'];
+            for($i = 0; $i < count($sess); $i++){
+                foreach ($sess[$i] as $k=>$v){
+                    if($v == true){
                         foreach ($this->works as $work){
-                            if($work->getID() == $id){
-                                $work->setSelect($res);
-                                if($res == true) $str_works .= $work->work . ", ";
-                                break;
+                            if($work->id == $k){
+                                $work->select = $v;
+                                $str_works .= $work->work . ", ";
                             }
+
                         }
                     }
                 }
             }
-
+//            $listworks = $this->listWorkForm->listwork->getChildComponents();
+//            foreach ($listworks as $listwork){
+//                $childs = $listwork->getChildComponents();
+//                foreach ($childs as $k=>$v){
+//                    if(str_starts_with($k, "checkTypeWork") == true){
+//                        $res = $v->getValue();
+//                        $id = $listwork->getDataItem()->getID();
+//                        foreach ($this->works as $work){
+//                            if($work->getID() == $id){
+//                                $work->setSelect($res);
+//                                if($res == true) $str_works .= $work->work . ", ";
+//                                break;
+//                            }
+//                        }
+//                    }
+//                }
+//            }
             if(strlen($str_works) != 0){
                 $this->pasportForm->editcomment->setText("$str_works");
                 $this->pasportForm->editcomment->setVisible(true);
@@ -420,8 +466,6 @@ class Pasport extends Base
         }else{
             $this->pasportForm->editcomment->setVisible(false);
         }
-
-
         $this->pasportForm->setVisible(true);
         $this->listWorkForm->setVisible(false);
     }

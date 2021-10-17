@@ -22,30 +22,38 @@ class ComponentProd extends \Zippy\Html\CustomComponent implements \Zippy\Interf
     public function getContent($attributes)
     {
         // TODO: Implement getContent() method.
-//        var_dump($this->value);
         $arr = $this->value;
-        $brr = $arr->elems;
-        $model_id = $arr->model_id;
-        $colors = [];
-        $defect = $arr->defect;
-        foreach ($defect as $d){
-            $work = $d->work;
-            $size = $d->size;
-            $x = 0; $y = 0;
-            for($j = 1; $j < count($brr[0]); $j++){
-                if($brr[0][$j] == $work) $y = $j;
-            }
-            for($i = 1; $i < count($brr); $i++){
-                $txt = explode(",", $brr[$i][0]);
-                $sz = $txt[1].trim();
-                if($sz == $size) $x = $i;
-            }
-            $colors[] = [$x, $y];
+        if($arr == null){
+            $this->str = "";
+            return $this->str;
         }
-        $row = count($brr);
-        $col = count($brr[0]);
-//        $data = "model";
-        $this->str = $this->createTable($row, $col, $brr, $model_id, "model", $colors);
+        $work_size = $arr->list_work_size;
+        $emp_work = $arr->list_emp_work;
+        $work_defect = $arr->list_work_defect;
+        $emp_defect = $arr->list_emp_defect;
+        $total_work = $arr->list_total_work;
+
+        $this->str = "";
+        $model_id = $arr->model_id;
+        for($i = 0; $i < count($work_size); $i++){
+            $w = $work_size[$i]->works;
+            $row = count($w);
+            $col = count($w[0]);
+            $this->str .= $this->createTable($row, $col, $w, $model_id, "model", $work_size[$i], $work_defect[$i]);
+
+            $e = $emp_work[$i]->emps;
+            $row1 = count($e);
+            $col1 = count($e[0]);
+            $this->str .= $this->createTable($row1, $col1, $e, $model_id,"0", $emp_work[$i], $emp_defect[$i]);
+
+            $t = $total_work[$i]->total;
+            $row2 = count($t);
+            $col2 = count($t[0]);
+
+            $this->str .= $this->createTable($row2, $col2, $t, $model_id, "1", $emp_work[$i]);
+
+        }
+
         return $this->str;
     }
 
@@ -60,11 +68,23 @@ class ComponentProd extends \Zippy\Html\CustomComponent implements \Zippy\Interf
         $this->value = $value;
     }
 
-    public function createTable($row, $col, $arr, $mid, $data, $color=[])
+    public function createTable($row, $col, $arr, $mid, $data, $area = "", $color=[])
     {
         $model = "";
-        if(strlen($mid) > 0) $model = "model_" . $mid;
-        $tpl = "<table id=" . $model . " " . "data-model=" . $data . "  class='table table-striped table-sm table-bordered' style='margin: 10px 0;'>";
+        if(strlen($mid) > 0) $model = "model_" . $mid . "_" . $area->area_id . "_" .$data;
+//        if(strlen($area) > 0) $area = ", " . $area;
+        if($data == "model"){
+            $tpl = "<h2 class='area-panel' style='background: #000; color: #fff; padding-left: 5px; border-radius: 5px;'>{$area->area_name}</h2>";
+            $tpl .= "<div class='show-panel'>";
+            $tpl .= "<p class='h5 text-muted' style='padding: 5px 0;font-weight: 600;'>Общее количество работ</p>";
+        }else{
+            if($data == "0"){
+                $tpl = "<p class='h5 text-muted' style='padding: 5px 0;font-weight: 600;'>Список сотрудников в работе данной модели</p>";
+            }
+
+        }
+
+        $tpl .= "<table id=" . $model . " " . "data-model=" . $data . "  class='table table-striped table-sm table-bordered' style='margin: 10px 0;'>";
         for ($i = 0; $i < $row; $i++){
             $tpl .= "<tr>";
             for($j = 0; $j < $col; $j++){
@@ -77,14 +97,20 @@ class ComponentProd extends \Zippy\Html\CustomComponent implements \Zippy\Interf
 
                 }else{
                     $fnd = false;
-                    for($p = 0; $p < count($color); $p++){
-                        if($color[$p][0] == $i && $color[$p][1] == $j){
+                    $color1 = $color->defects;
+                    $sz = "";
+                    for($p = 0; $p < count($color1); $p++){
+                        if($color1[$p][0] == $i && $color1[$p][1] == $j){
                             $fnd = true;
+                            $sz = $color->size[$p];
+                            $emp_id = $color->emp_id[$p];
+                            $work_id = $color->work_id[$p];
                             break;
                         }
                     }
                     if($fnd == true){
-                        $tpl .= "<td style='border-radius: 5px;background: #ed2d2d;' data-color='1';>" . $arr[$i][$j] . "</td>";
+                        $emp_work = $mid . "-" . $sz . "-" . $emp_id . "-" . $work_id;
+                        $tpl .= "<td style='border-radius: 5px;background: #ed2d2d;' data-color='{$emp_work}';>" . $arr[$i][$j] . "</td>";
                     }else{
                         $tpl .= "<td style='border-radius: 5px;'>" . $arr[$i][$j] . "</td>";
                     }
@@ -93,7 +119,9 @@ class ComponentProd extends \Zippy\Html\CustomComponent implements \Zippy\Interf
             $tpl .= "</tr>";
         }
         $tpl .= "</table>";
-
+        if($data == "1"){
+            $tpl .= "</div>";
+        }
         return $tpl;
     }
 }

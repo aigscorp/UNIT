@@ -10,6 +10,7 @@ $args = $_GET;
 $param = $_GET["q"];
 // echo $param;
 $url = "http://localhost/index.php?q=";
+//$url = "https://makepro.su/index.php?q=";
 $pos = stripos($param, "::quantity");
 
 $page_pag = substr($param, 0, $pos);

@@ -112,8 +112,8 @@ class PasportList extends \App\Pages\Base
             $text_material = "";
 
             for ($i = 0; $i < count($items); $i++) {
-                preg_match_all('/\<material\>([а-яА-Яa-zA-Z ].*?)\<\/material\>\<quantity\>([0-9]+)\<\/quantity\>/i', $items[$i], $all_material);
-                $text_material .= $all_material[1][0] . " (" . $all_material[2][0] . "),";
+                preg_match_all('/\<material\>([а-яА-Яa-zA-Z.,\/ ].*?)\<\/material\>\<quantity\>([0-9.,]+)\<\/quantity\>/i', $items[$i], $all_material);
+                $text_material .= $all_material[1][0] . " <" . $all_material[2][0] . ">,";
             }
 
             $str_edit_text = $text_material . "::" . $str_to_items . "::" . "edit";
@@ -124,6 +124,9 @@ class PasportList extends \App\Pages\Base
 
     public function addNewOnClick()
     {
+        if(isset($_SESSION['kindwork']) == true){
+            unset($_SESSION['kindwork']);
+        }
         App::Redirect("\\App\\Pages\\Pasport");
     }
 }

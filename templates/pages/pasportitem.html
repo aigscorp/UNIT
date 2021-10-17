@@ -16,12 +16,14 @@
                         <table class="table table-borderless table-striped">
                             <tr>
                                 <th>Материалы</th>
+                                <th>Ед. измерения</th>
                                 <th>Количество</th>
                                 <th>Изображение</th>
                             </tr>
                             <tr zippy="itemlist">
                                 <td><span zippy="typeMaterial"></span></td>
-                                <td><input zippy="quantity" type="number"/></td>
+                                <td><span zippy="typeUnit"></span></td>
+                                <td><input zippy="quantity" type="number" min="0"/></td>
                                 <!--<td><a  zippy="edit"><i class="fa fa-edit"></i></a> </td>-->
                                 {{#useimages}}
                                 <td>

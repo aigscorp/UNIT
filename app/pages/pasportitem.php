@@ -42,7 +42,7 @@ class PasportItem extends \App\Pages\Base
 //            return;
 //        }
         $this->str_items = $params;
-        $this->pg_size = 8;
+        $this->pg_size = 10;
         $this->add(new Panel('itemtable'))->setVisible(true);
         $this->itemtable->add(new Form('listform')) ;
 
@@ -59,7 +59,8 @@ class PasportItem extends \App\Pages\Base
     public function itemlistOnRow(\Zippy\Html\DataList\DataRow $row) {
         $item = $row->getDataItem();
 
-        $row->add(new Label('typeMaterial', $item->itemname . ", " . $item->msr));
+        $row->add(new Label('typeMaterial', $item->itemname));
+        $row->add(new Label('typeUnit',  $item->msr));
         $row->typeMaterial->setAttribute('data-itemid', $item->item_id);
         $pag_search = $_GET['q'];
         $match = [];
@@ -117,7 +118,8 @@ class PasportItem extends \App\Pages\Base
                     $parse = explode("_", $key);
                     if($parse[1] != $pag_num){
                         $str_mat = $material[(intval($parse[1])-1) * ($this->pg_size) + intval($parse[2])-1];
-                        $text .= $str_mat . " (" . $val . ")|(" . $parse[3] . ")|,";
+                        //$text .= $str_mat . " (" . $val . ")|(" . $parse[3] . ")|,";
+                        $text .= $str_mat . " <" . $val . ">|(" . $parse[3] . ")|,";
                     }
                 }
             }
@@ -133,7 +135,8 @@ class PasportItem extends \App\Pages\Base
                         $item_id = $itemmaterial[$p]->getAttribute('data-itemid');
                         if($value != "" && $value != 0){
                             $text .= $v->getText();
-                            $text .= " (" . $value . ")|(" . $item_id . ")|,";
+                            // $text .= " (" . $value . ")|(" . $item_id . ")|,";
+                            $text .= " <" . $value . ">|(" . $item_id . ")|,";
                         }
                     }
                 }
@@ -165,7 +168,7 @@ class ItemDataTest implements \Zippy\Interfaces\DataSource
             if ($cat == -1) {
                 $where = $where . " and cat_id=0";
             } else {
-                $where = $where . " and cat_id=" . $cat;
+                $where = $where . " and cat_id=" . $cat . " and disabled = false";
             }
         }
         return $where;
