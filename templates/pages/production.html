@@ -28,6 +28,30 @@
     </div>
 </div>
 <div id="model"></div>
+
+<div class="navbar nav">
+
+    <form zippy="filterwork" class="form-inline">
+
+        <label for="searchkeywork">Поиск</label>
+        <input class="form-control mr-2" type="text" zippy="searchkeywork" onkeydown="onSearch()">
+        <label for="searchcatwork"> производ. участок</label>
+
+        <select class="form-control mr-2" zippy="searchcatwork">
+            <option value="0">Не задана</option>
+        </select>
+
+        <div class="form-check">
+
+            <input title="Показать неактуальные" class="form-check-input" type="checkbox" zippy="showdiswork">
+            <label class="form-check-label mr-3" for="showdiswork">Показать выбранные</label>
+        </div>
+
+        <input class="btn btn-outline-success  " type="submit" value="ОК">
+
+    </form>
+</div>
+
 <div class="row">
     <form zippy="worktable" class="col-12 col-md-10 col-lg-8">
         <h3>Список работ</h3>
@@ -51,6 +75,25 @@
             <input zippy="saveProduct" type="submit" value="В производство" class="btn btn-outline-primary">
             <input zippy="cancelProduct" type="submit" value="Отменить" class="btn btn-outline-primary">
         </div>
+    </form>
+</div>
+
+
+<div class="navbar nav">
+
+    <form zippy="filteremp" class="form-inline">
+
+        <label for="searchkeyemp">Поиск</label>
+        <input class="form-control mr-2" type="text" zippy="searchkeyemp" onkeydown="onSearch()">
+
+        <div class="form-check">
+
+            <input title="Показать неактуальные" class="form-check-input" type="checkbox" zippy="showdisemp">
+            <label class="form-check-label mr-3" for="showdisemp">Показать выбранные</label>
+        </div>
+
+        <input class="btn btn-outline-success  " type="submit" value="ОК">
+
     </form>
 </div>
 

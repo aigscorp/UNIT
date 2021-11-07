@@ -1,6 +1,8 @@
 <html lang="ru">
 <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="../../assets/css/model.css">
+    <link rel="stylesheet" href="../../assets/css/master.css">
     <script src="../../assets/js/popup.js"></script>
 </head>
 <body>
@@ -40,9 +42,11 @@
             <form zippy="masterForm">
                 <div class="form-group">
                     <!--<label for="workType">Виды работ</label>-->
+                    <!--style="position: absolute; top: 11px; left: 5px;"-->
+                    <!--style="padding-left: 25px; width: 50%;"-->
                     <div style="position: relative;">
-                        <i class="fa fa-bars" aria-hidden="true" style="position: absolute; top: 11px; left: 5px;"></i>
-                        <select class="form-control" zippy="workTypeMaster" style="padding-left: 25px; width: 50%;">
+                        <i class="fa fa-bars gamburger" aria-hidden="true"></i>
+                        <select class="form-control gamburger-text" zippy="workTypeMaster">
                             <option value="0">Не выбран</option>
                         </select>
 
@@ -62,14 +66,19 @@
     </div>
 
     <div class="row">
-        <div class="col-8">
+        <div class="table-responsive">
             <form zippy="tableWorkForm">
                 <table class="table table-striped table-sm">
                     <tr>
-                        <th scope="col">Размерный ряд</th>
-                        <th scope="col">Количество выполненных</th>
-                        <th scope="col">Количество всего работ</th>
-                        <th scope="col">Количество остаток</th>
+                        <!--<th scope="col">Размерный ряд</th>-->
+                        <!--<th scope="col">Количество выполненных</th>-->
+                        <!--<th scope="col">Количество всего работ</th>-->
+                        <!--<th scope="col">Количество остаток</th>-->
+                        <!--<th scope="col"></th>-->
+                        <th scope="col">Размеры</th>
+                        <th scope="col">Выполнено</th>
+                        <th scope="col">Всего работ</th>
+                        <th scope="col">Остаток</th>
                         <th scope="col"></th>
                     </tr>
                     <tr zippy="listWorkModelMaster" class="model-master">
@@ -99,7 +108,7 @@
                 <!--<div zippy="modelNameSize2" class="h3" style="margin: 10px 0;"></div>-->
                 <table class="table table-striped table-sm">
                     <tr>
-                        <th scope="col">Размерный ряд</th>
+                        <th scope="col">Размер</th>
                         <th scope="col">Выбрать описание брака</th>
                         <th scope="col"></th>
                     </tr>
@@ -121,7 +130,8 @@
         </div>
     </div>
     <div class="row">
-        <div class="col-6">
+        <div class="table-responsive">
+
             <form zippy="finishModelForm">
                 <table class="table table-striped table-sm">
                     <tr>
@@ -138,6 +148,7 @@
                     <input zippy="cancelConfirmModel" type="submit" value="Отменить" class="btn btn-outline-primary">
                 </div>
             </form>
+
         </div>
     </div>
 

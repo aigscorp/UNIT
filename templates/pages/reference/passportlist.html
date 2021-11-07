@@ -1,0 +1,272 @@
+<html lang="ru">
+<head>
+    <link rel="stylesheet" href="/assets/css/ekko-lightbox.css">
+    <script src="/assets/js/ekko-lightbox.js" type="text/javascript"></script>
+    <script src="../../assets/js/popup.js"></script>
+</head>
+<body>
+
+    <div class="row">
+
+
+        <div zippy="passporttable" class="col-12 col-md-10 col-lg-8">
+            <h3>Список паспортов моделей</h3>
+
+            <div class="navbar nav">
+
+                <form zippy="filterpassport" class="form-inline">
+
+                    <label for="searchkeypas">Поиск</label>
+                    <input class="form-control mr-2" type="text" zippy="searchkeypas" onkeydown="onSearch()">
+
+                    <div class="form-check">
+
+                        <input title="Показать неактуальные" class="form-check-input" type="checkbox" zippy="showdispas">
+                        <label class="form-check-label mr-3" for="showdispas">Показать все</label>
+                    </div>
+
+                    <input class="btn btn-outline-success  " type="submit" value="ОК">
+
+                </form>
+            </div>
+
+
+
+            <a zippy="addnew" class="btn btn-outline-primary btn-sm">Добавить</a>
+            <table class="table table-hover   table-sm">
+                <tr>
+                    <th>Наименование</th>
+                    <th>Размеры</th>
+                    <th>В архив</th>
+                    <th>Изображение</th>
+                    <th></th>
+                </tr>
+                <tr zippy="passportlist">
+                    <td zippy="pas_name"></td>
+
+                    <td zippy="pas_size"></td>
+
+                    <td zippy="pas_arch"></td>
+                    <td>
+                        <a zippy="imagelistitem" data-type="image" data-toggle="lightbox"> <img
+                                style="float:left; width:48px; border-radius: 50%;"></a>
+                    </td>
+                    <td style="width:52px">
+                        <a zippy="edit" title="Редактирование"><i class="fa fa-edit"></i></a>
+                        <a zippy="delete" title="Удалить"><i class="fa fa-trash"></i></a>
+                    </td>
+                </tr>
+            </table>
+            <div zippy="pag"></div>
+
+        </div>
+        <div class="col-12 col-md-10  col-lg-8">
+            <form zippy="passportdetail">
+                <div class="row">
+                    <div class="col-6">
+                        <div class="form-group">
+                            <label for="editpas_name">Наименование</label>
+                            <input required="required" zippy="editpas_name" class="form-control">
+
+                        </div>
+                        <div class="form-group">
+                            <label for="editsize">Размеры модели</label>
+
+                            <select class="form-control" zippy="editsize">
+                                <option value="-1">Не указан</option>
+                            </select>
+                            <div zippy="panelNewModelSize">
+                                <table class="table table-borderless table-striped table-sm" style="margin-top: 10px;">
+                                    <thead class="table-dark">
+                                    <tr>
+                                        <th>Модель</th>
+                                        <th>Размер</th>
+                                        <th>Количество</th>
+                                    </tr>
+                                    </thead>
+                                    <tr zippy="newSizeModel">
+                                        <td><span zippy="namemodel"></span></td>
+                                        <td>
+                                            <span zippy="sizemodel"></span>
+                                        </td>
+                                        <td><input type="number" min="0" zippy="countofsize"/></td>
+                                    </tr>
+                                </table>
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="form-group ">
+                            <label class="col-5 col-form-label">Изображение</label>
+
+                            <div class="col-12">
+                                <img zippy="editimage"><br>
+                                <input type="file" class="form-control" zippy="editaddfile"  accept="image/jpeg,image/png,image/gif">
+                                <div class="form-check">
+                                    <input zippy="editdelimage" type="checkbox" class="form-check-input">
+                                    <label class="form-check-label" data-label="editdelimage" for="editdelimage">Удалить
+                                        избражение</label>
+                                </div>
+                                <small>Изображение  должно  быть примерно квадратным  иначе  будет  обрезано</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <div class="form-group">
+                            <input zippy="addmaterials" type="submit" value="Добавить комплектующие для модели" class="note-btn"
+                                   style="border: none; color: #007bff; padding: 0;"/>
+                        </div>
+                        <div class="form-group">
+                            <textarea style="height: inherit" zippy="editmaterial" class="form-control" readonly="readonly"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <a zippy="addworks">Добавить список работ</a>
+                        </div>
+                        <div class="form-group">
+                            <textarea zippy="editwork" class="form-control" readonly="readonly"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <input zippy="save" type="submit" value="Сохранить" class="btn btn-primary  ">&nbsp;&nbsp;
+                            <input zippy="cancel" type="button" value="Отменить" class="btn btn-light  ">
+                        </div>
+                    </div>
+
+                </div>
+            </form>
+        </div>
+
+        <div class="navbar nav">
+
+            <form zippy="filter" class="form-inline">
+
+                <label for="searchkey">Поиск</label>
+                <input class="form-control mr-2" type="text" zippy="searchkey" onkeydown="onSearch()">
+                <label for="searchcat">категория</label>
+
+                <select class="form-control mr-2" zippy="searchcat">
+                    <option value="0">Не задана</option>
+                </select>
+
+                <div class="form-check">
+
+                    <input title="Показать неактуальные" class="form-check-input" type="checkbox" zippy="showdis">
+                    <label class="form-check-label mr-3" for="showdis">Показать выбранные</label>
+                </div>
+
+                <input class="btn btn-outline-success  " type="submit" value="ОК">
+
+            </form>
+        </div>
+        <div class="col-12 col-md-12  col-lg-12">
+            <form zippy="panelMaterial">
+                <table class="table table-borderless table-striped table-sm" style="margin-top: 10px;">
+                    <thead class="table-dark">
+                    <tr>
+                        <th>Материалы</th>
+                        <th>Ед. измерения</th>
+                        <th>Количество</th>
+                        <th>Изображение</th>
+                        <th></th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tr zippy="material_list">
+                        <td><span zippy="material_name"></span></td>
+                        <td>
+                            <span zippy="material_msr"></span>
+                        </td>
+                        <!--<td><span zippy="material_qty"></span></td>-->
+                        <td>
+                            <input zippy="material_qty" type="number" min="0" max="100000" step="any"/>
+                        </td>
+                        <td>
+                            <a zippy="imagelistitem" data-type="image" data-toggle="lightbox"> <img
+                                    style="float:left; width:48px; border-radius: 50%;"></a>
+                        </td>
+                        <td>
+                            <a zippy="material_del">Удалить</a>
+                        </td>
+
+                    </tr>
+                </table>
+                <div zippy="pag"></div>
+                <div class="form-group">
+                    <input zippy="saveMaterialTotal" type="submit" value="Сохранить" class="btn btn-outline-primary">
+                    <input zippy="cancelMaterialTotal" type="submit" value="Отменить" class="btn btn-outline-primary"/>
+                </div>
+            </form>
+        </div>
+
+        <div class="navbar nav">
+
+            <form zippy="filterwork" class="form-inline">
+
+                <label for="searchkeywork">Поиск</label>
+                <input class="form-control mr-2" type="text" zippy="searchkeywork" onkeydown="onSearch()">
+                <label for="searchcatwork"> производ. участок</label>
+
+                <select class="form-control mr-2" zippy="searchcatwork">
+                    <option value="0">Не задана</option>
+                </select>
+
+                <div class="form-check">
+
+                    <input title="Показать неактуальные" class="form-check-input" type="checkbox" zippy="showdiswork">
+                    <label class="form-check-label mr-3" for="showdiswork">Показать выбранные</label>
+                </div>
+
+                <input class="btn btn-outline-success  " type="submit" value="ОК">
+
+            </form>
+        </div>
+        <div class="col-12 col-md-12  col-lg-12">
+            <form zippy="listWorkForm">
+                <div class="row">
+                    <div class="col-8">
+                        <div class="form-group">
+                            <table class="table table-borderless table-striped table-sm">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Вид работы</th>
+                                        <th>Стоимость</th>
+                                        <th>Выбрать</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tr zippy="listwork">
+                                    <td><span zippy="typeWork"></span></td>
+                                    <td><span zippy="price"></span></td>
+                                    <td>
+                                        <div class="form-check">
+                                            <input type="checkbox" zippy="checkTypeWork" class="form-check-input"/>
+                                        </div>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                            </table>
+                            <div zippy="pag1"></div>
+                        </div>
+                        <div class="form-group">
+                            <input zippy="saveWork" type="submit" value="Сохранить" class="btn btn-outline-primary">
+                            <input zippy="cancelWork" type="submit" value="Отменить" class="btn btn-outline-primary"/>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+    </div>
+    <script>
+      $(document).ready(function () {
+        console.log('script running...');
+        $(document).on('click', '[data-toggle="lightbox"]', function (event) {
+          event.preventDefault();
+          $(this).ekkoLightbox({'alwaysShowClose': true});
+        });
+      });
+    </script>
+</body>
+</html>

@@ -2,6 +2,7 @@
 
 namespace App\Pages;
 
+use App\Application as App;
 use Zippy\Html\Form\Form;
 use Zippy\Html\Form\SubmitButton;
 use \Zippy\Html\Link\ClickLink;
@@ -41,6 +42,11 @@ class ControlProd extends \App\Pages\Base
             $model_list[$r['model_id']] = $r['name'] . ", " . $r['size'];
         }
 
+        $this->add(new Label('msg_prod'));
+        if($params != null){
+            $this->msg_prod->setText($params);
+        }
+
         $this->add(new \App\Widgets\MenuProduction('widgetMenu', $this, ''))->setVisible(true);
         $this->add(new Form('modelWorkSelect'));
         $this->modelWorkSelect->add(new DropDownChoice('selectModel'))->onChange($this, 'selectModelOnChange');
@@ -49,7 +55,7 @@ class ControlProd extends \App\Pages\Base
         $this->add(new Form('totalWorkForm'));
         $this->add(new Form('panelMonitor'));
         $this->panelMonitor->add(new SubmitLink('doneProduction'))->onClick($this, 'doneProductionOnClick');
-        $this->panelMonitor->add(new SubmitLink('finishProduction'))->onClick($this, 'finishProductionOnClick', true); //заменить на SubmitButton
+        $this->panelMonitor->add(new SubmitButton('finishProduction'))->onClick($this, 'finishProductionOnClick', true); //заменить на SubmitButton
 
         $this->add(new ComponentProd('tableModelComponent'));//->onClick($this, 'testOnClick');
 
@@ -259,11 +265,12 @@ class ControlProd extends \App\Pages\Base
     }
     public function finishProductionOnClick($sender){
         if($this->pasportID == "") return false;
-
         $sizes = [];
+        $model_id = "";
         foreach ($this->models as $mod){
             if($mod->pasport_id == $this->pasportID){
                 $sizes = $mod->size;
+                $model_id = $mod->model_id;
                 break;
             }
         }
@@ -298,12 +305,71 @@ class ControlProd extends \App\Pages\Base
         foreach ($sizes as $sz){
             if($min > $sz) $min = $sz;
         }
-        $modelComplect = $min;
+        $modelComplect = floatval($min);
+
+        $sql = "SELECT detail FROM pasport_tax WHERE qty_material = true AND pasport_id = " . $this->pasportID;
+        $conn = \ZDB\DB::getConnect();
+        $rs = $conn->Execute($sql);
+        $material_qty = [];
+        $stock_str = "";
+        foreach ($rs as $r){
+            $detail = preg_match('/\<material\>([0-9]+)\<\/material\>\<quantity\>([0-9,. ]+)\<\/quantity\>/i', $r['detail'], $matches);
+            $material_qty[$matches[1]] = floatval($matches[2] * $modelComplect);
+            $stock_str .= "'{$matches[1]}'" . ",";
+//            $stock_str .= "ss.item_id = '{$matches[1]}' AND ";
+        }
+        $stock_str = substr($stock_str, 0, -1);
+
+        $sql = "SELECT count(*) as cnt FROM store_stock WHERE item_id IN(" . $stock_str . ")";
+        $rscnt = $conn->getOne($sql);
+        if(intval($rscnt) != count($material_qty)){
+            $sql = "SELECT ss.stock_id, ss.item_id, ss.partion, ss.qty FROM store_stock ss WHERE ss.item_id IN(" . $stock_str . ")";
+            $rs = $conn->Execute($sql);
+            $stocks = [];
+            foreach ($rs as $r){
+                $stock_store = new \stdClass();
+                $stock_store->stock_id = $r['stock_id'];
+                $stock_store->item_id = $r['item_id'];
+                $stock_store->price = $r['partion'];
+                $stock_store->qty = floatval($r['qty']);
+                $stocks[] = $stock_store;
+            }
+            foreach ($material_qty as $km=>$vm){
+                foreach ($stocks as $stock){
+                    if($stock->item_id == $km){
+                        $stock->qty -= $vm;
+                    }
+                }
+            }
+            foreach ($stocks as $stock){
+                $sql = "UPDATE store_stock SET qty = '{$stock->qty}' WHERE stock_id = " . $stock->stock_id;
+                $conn->Execute($sql);
+            }
+            $sql = "UPDATE model SET in_work = false, finished = true WHERE pasport_id = " . $this->pasportID;
+            $conn->Execute($sql);
+            $js2 = "
+                 let orig = window.location.origin;
+                 window.location = orig + '/index.php?p=/App/Pages/Production'              
+                ";
+            $this->updateAjax(array(), $js2);
+        }else{
+            $msg = "На складе не оприходованы материалы, которые используются в модели";
+//            App::Redirect("\\App\\Pages\\ControlProd", $msg);
+//            $js2 = "
+//                 let orig = window.location.origin;
+//                 window.location = orig + '/index.php?p=/App/Pages/ControlProd'
+//                ";
+            $js = "
+                    $('#msg_prod').append(\"<div style='margin: 10px 5px'><p style='color: darkred; font-size: 1.5em'>{$msg}</p></div>\");
+                    $('#msg_prod').children().fadeOut(5000, \"linear\", function(){\$('#msg_prod').children().remove()} );
+                    ";
+            $this->updateAjax(array(), $js);
+//            $this->updateAjax(array(), $js2);
+        }
 
 
     }
     public function finishProductionOnClick_old($sender){
-//        $s = $sender;
         $count = $this->count;
 
         $totalComponent = $this->getComponent('tableTotalComponent');
@@ -541,26 +607,3 @@ class ListMastersWork
 //    public function getModelID() { return $this->model_id; }
 //}
 
-
-
-/*
- * SELECT
-    p.id,
-    p.name,
-    p.comment,
-    t.type_work
-FROM
-    pasport p,
-    model m,
-    typework t
-WHERE
-    m.in_work = TRUE AND p.id = m.pasport_id AND t.pasport_id = p.id
- *
- *
- * select t.type_work, t.pasport_id, m.detail from typework t, masters m where t.id=m.typework_id
- *
- *
- * select t.type_work, m.emp_id,m.detail from typework t, masters m where t.pasport_id=31 and t.id=m.typework_id
- *
- *
- */

@@ -1,0 +1,70 @@
+<html>
+<head>
+</head>
+<body>
+<div class="row">
+
+    <div zippy="sizetable" class="col-12 col-md-10 col-lg-8">
+        <h3>Справочник размеров </h3>
+        <a zippy="addnew" class="btn btn-outline-primary btn-sm">Добавить</a>
+        <table class="table table-hover   table-sm">
+            <tr>
+                <th>Размеры</th>
+
+                <th></th>
+            </tr>
+            <tr zippy="sizelist">
+                <td zippy="sizerange"></td>
+
+                <td style="width:52px"><a zippy="edit" title="Редактирование"><i class="fa fa-edit"></i></a> <a
+                        zippy="delete" title="Удалить"><i class="fa fa-trash"></i></a></td>
+            </tr>
+        </table>
+        <div zippy="pag"></div>
+
+    </div>
+
+
+    <div class="col-12 col-md-10  col-lg-8">
+        <form zippy="sizedetail">
+            <div class="row">
+                <div class="col-6">
+                    <div class="form-group">
+                        <label for="edit_size">Размер</label>
+                        <input required="required" zippy="edit_size" class="form-control">
+                        <small>Размеры вводятся в формате, пример 40-45</small>
+                    </div>
+                    <div class="form-row">
+                        <div class="col">
+                            <ul>
+                                <li>16</li>
+                                <li>17</li>
+                                <li>18</li>
+                                <li>19</li>
+                                <li>20</li>
+                                <li>21</li>
+                            </ul>
+                        </div>
+                        <div class="col">
+                            <ul>
+                                <li>22</li>
+                                <li>23</li>
+                                <li>24</li>
+                                <li>25</li>
+                                <li>26</li>
+                                <li>27</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <input zippy="save" type="submit" value="Сохранить" class="btn btn-primary  ">&nbsp;&nbsp;
+                        <input zippy="cancel" type="button" value="Отменить" class="btn btn-light  ">
+                    </div>
+                </div>
+
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+</html>

@@ -42,7 +42,7 @@ class PasportItem extends \App\Pages\Base
 //            return;
 //        }
         $this->str_items = $params;
-        $this->pg_size = 10;
+        $this->pg_size = 20;
         $this->add(new Panel('itemtable'))->setVisible(true);
         $this->itemtable->add(new Form('listform')) ;
 
@@ -100,7 +100,8 @@ class PasportItem extends \App\Pages\Base
         $text = "";
         if($sender->id == 'saveMaterial'){
             $conn = \ZDB\DB::getConnect();
-            $sql = "SELECT itemname, item_id FROM items WHERE cat_id=9 ORDER BY 1";
+//            $sql = "SELECT itemname, item_id FROM items WHERE cat_id = 9 ORDER BY 1";
+            $sql = "SELECT itemname, item_id FROM items ORDER BY 1";
             $rs = $conn->Execute($sql);
             $material = [];
             foreach ($rs as $r){
@@ -118,6 +119,7 @@ class PasportItem extends \App\Pages\Base
                     $parse = explode("_", $key);
                     if($parse[1] != $pag_num){
                         $str_mat = $material[(intval($parse[1])-1) * ($this->pg_size) + intval($parse[2])-1];
+//                        $str_mat = $material[(intval($parse[1])-1) * ($this->pg_size) + intval($parse[2])];
                         //$text .= $str_mat . " (" . $val . ")|(" . $parse[3] . ")|,";
                         $text .= $str_mat . " <" . $val . ">|(" . $parse[3] . ")|,";
                     }

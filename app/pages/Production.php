@@ -9,6 +9,8 @@
 namespace App\Pages;
 
 use App\Application as App;
+use App\Entity\Kind;
+use App\Entity\WorkModel;
 use Zippy\Html\Form\Button;
 use Zippy\Html\Form\CheckBox;
 use Zippy\Html\Form\Form;
@@ -50,7 +52,8 @@ class Production extends \App\Pages\Base
         parent::__construct($params);
 
         $conn = \ZDB\DB::getConnect();
-        $sql = "select p.id as id, p.name as name, p.size as size, m.in_work as in_work from model as m, pasport as p where p.id = m.pasport_id";
+        $sql = "select p.id as id, p.name as name, p.size as size, m.in_work as in_work 
+                from model as m, pasport as p where p.id = m.pasport_id and m.finished = false";
 
         $rs = $conn->Execute($sql);
         foreach($rs as $r){
@@ -69,22 +72,47 @@ class Production extends \App\Pages\Base
         $this->detailProduction->add(new DataView('list',
             new ArrayDataSource(new \Zippy\Binding\PropertyBinding($this,"items")),$this,'listOnRow'))->Reload();
 
+        $this->add(new Form('filterwork'))->onSubmit($this, 'OnFilterWork');
+        $this->filterwork->setVisible(false);
+        $this->filterwork->add(new CheckBox('showdiswork'));
+
+        $this->filterwork->add(new TextInput('searchkeywork'));
+        $catlist_work = array();
+        $conn = \ZDB\DB::getConnect();
+        $sql = "SELECT pa_id, pa_name FROM parealist";
+        $rs = $conn->Execute($sql);
+        foreach ($rs as $r){
+            $catlist_work[$r['pa_id']] = $r['pa_name'];
+        }
+        $this->filterwork->add(new DropDownChoice('searchcatwork', $catlist_work, 0));
+
         $this->add(new Form('worktable'))->setVisible(false);
-        $this->worktable->add(new DataView('worklist',
-            new ArrayDataSource(new \Zippy\Binding\PropertyBinding($this,"worklists")),$this,'worklistOnRow'));//->Reload();
+//        $this->worktable->add(new DataView('worklist',
+//            new ArrayDataSource(new \Zippy\Binding\PropertyBinding($this,"worklists")),$this,'worklistOnRow'));
+
+        $this->worktable->add(new DataView('worklist', new ItemDataWorkModel($this), $this, 'worklistOnRow'));
+
         $this->worktable->add(new SubmitButton('saveProduct'))->onClick($this, 'saveProductOnClick', true);
         $this->worktable->add(new Button('cancelProduct'))->onClick($this, 'cancelProductOnClick');
         $this->worktable->worklist->setPageSize(Helper::getPG());
         $this->worktable->add(new \Zippy\Html\DataList\Paginator('pagwork', $this->worktable->worklist));
 
+
+        $this->add(new Form('filteremp'))->onSubmit($this, 'OnFilterEmp');
+        $this->filteremp->setVisible(false);
+        $this->filteremp->add(new CheckBox('showdisemp'));
+        $this->filteremp->add(new TextInput('searchkeyemp'));
+
         $this->add(new Form('employeetable'))->setVisible(false);
         $this->employeetable->add(new Label('employeework', 'Список работников'));
         $this->employeetable->add(new SubmitButton('save'))->onClick($this, 'saveOnClick');
         $this->employeetable->add(new Button('cancel'))->onClick($this, 'cancelOnClick');
-        $this->employeetable->add(new DataView('employeelist',
-            new ArrayDataSource(new \Zippy\Binding\PropertyBinding($this,"employeelists")),$this,'employeelistOnRow'));//->Reload();
+//        $this->employeetable->add(new DataView('employeelist',
+//            new ArrayDataSource(new \Zippy\Binding\PropertyBinding($this,"employeelists")),$this,'employeelistOnRow'));//->Reload();
+        $this->employeetable->add(new DataView('employeelist', new ItemDataWorkEmp($this), $this, 'employeelistOnRow'));
         $this->employeetable->employeelist->setPageSize(Helper::getPG());
         $this->employeetable->add(new \Zippy\Html\DataList\Paginator('pagemp', $this->employeetable->employeelist));
+        /****************************************/
 
         $this->add(new Form('addWorkEmp'))->setVisible(false);
         $this->addWorkEmp->add(new Label('displaymodel'));
@@ -120,6 +148,7 @@ class Production extends \App\Pages\Base
         $row->add(new ClickLink('modelCancel'))->onClick($this, 'modelCancelOnClick');
         if($item->in_work == false){
             $row->modelCancel->setAttribute('class', 'btn btn-outline-secondary disabled');
+            $row->modelUpdate->setAttribute('class', 'btn btn-outline-secondary disabled');
         }
     }
 
@@ -154,56 +183,88 @@ class Production extends \App\Pages\Base
 
     public function modelWorkOnClick($sender){
         $item = $sender->getOwner()->getDataItem();
-        $model_id = $item->getID();
-        $this->modelID = $model_id;
+        $pasport_id = $item->getID();
+        $this->modelID = $pasport_id;
         $this->size = $item->size;
 
         $this->detailProductionDefect->setAttribute('style', 'display: none');
-
-        $conn = \ZDB\DB::getConnect();
-        $sql = "SELECT * FROM kindworks k WHERE k.id IN (SELECT ExtractValue(pt.detail,'/work') as id from pasport_tax pt 
-        WHERE pt.pasport_id = '{$model_id}' AND pt.qty_material = false)";
-        $rs = $conn->Execute($sql);
-
-        foreach ($rs as $r){
-            $this->worklists[] = new WorkType($r['id'], $r['work']);
+        session_start();
+        if(isset($_SESSION['workemp']) == true){
+            unset($_SESSION['workemp']);
         }
+        if(isset($_SESSION['kindwork']) == true){
+            unset($_SESSION['kindwork']);
+        }
+        $_SESSION['workemp'] = [];
+//        $conn = \ZDB\DB::getConnect();
+//        $sql = "SELECT * FROM kindworks k WHERE k.id IN (SELECT ExtractValue(pt.detail,'/work') as id from pasport_tax pt
+//        WHERE pt.pasport_id = '{$model_id}' AND pt.qty_material = false)";
+//        $rs = $conn->Execute($sql);
+//
+//        foreach ($rs as $r){
+//            $this->worklists[] = new WorkType($r['id'], $r['work']);
+//        }
 
+        $this->filterwork->clean();
+        $this->filterwork->setVisible(true);
+        $this->filterwork->setAttribute('pasport_id', $pasport_id);
         $this->worktable->worklist->Reload();
+
         $this->detailProduction->setVisible(false);
         $this->worktable->setVisible(true);
     }
-
+    public function OnFilterWork($sender){
+        $this->worktable->worklist->Reload();
+    }
+    public function OnFilterEmp($sender){
+        $this->employeetable->employeelist->Reload();
+    }
     public function worklistOnRow(\Zippy\Html\DataList\DataRow $row){
         $item = $row->getDataItem();
         $row->add(new Label('work_name', $item->work));
         $row->add(new ClickLink('work_select'))->onClick($this, 'selectWorkerOnClick');
         $row->add(new Label('work_master', new \Zippy\Binding\PropertyBinding($item, 'show')));
+        $id = $item->id;
+        if(array_key_exists($id, $_SESSION['workemp']) == true){
+            $str_w = "";
+            foreach ($_SESSION['workemp'][$id] as $w){
+                $str_w .= $w . ",";
+            }
+            $str_w = substr($str_w, 0, -1);
+            $row->work_master->setText($str_w);
+        }
+
     }
 
     public function selectWorkerOnClick($sender){
         $work = $sender->getOwner()->getDataItem();
         $this->work_id = $work->id;
-
+        $_SESSION['workemp'][$work->id] = [];
 //        $w_txt = $this->employeetable->employeework->getText();
         $this->employeetable->employeework->setText('Список работников' . ", " . $work->work);
+        $this->employeetable->employeework->setAttribute('work_id', $work->id);
+//        $this->filterwork->clean();
+//        $this->employeetable->employeelist->Reload();
+//        $conn = \ZDB\DB::getConnect();
+//        $sql = "SELECT e.employee_id as emp_id, e.login, e.emp_name FROM employees e WHERE e.disabled = false";
+//        $rs = $conn->Execute($sql);
+//
+//        $this->employeelists = [];
+//
+//        foreach ($rs as $r){
+//            $this->employeelists[] = new EmpWork($r['emp_id'], $r['login'], $r['emp_name'], false);
+//        }
+//        foreach ($this->worklists as $wrkl){
+//            if($this->work_id == $wrkl->id){
+//                $wrkl->show = "";
+//            }
+//        }
 
-        $conn = \ZDB\DB::getConnect();
-        $sql = "SELECT e.employee_id as emp_id, e.login, e.emp_name FROM employees e WHERE e.disabled = false";
-        $rs = $conn->Execute($sql);
-
-        $this->employeelists = [];
-
-        foreach ($rs as $r){
-            $this->employeelists[] = new EmpWork($r['emp_id'], $r['login'], $r['emp_name'], false);
-        }
-        foreach ($this->worklists as $wrkl){
-            if($this->work_id == $wrkl->id){
-                $wrkl->show = "";
-            }
-        }
-
+        $this->filteremp->clean();
         $this->employeetable->employeelist->Reload();
+        $this->filterwork->setVisible(false);
+        $this->filteremp->setVisible(true);
+
         $this->worktable->setVisible(false);
         $this->employeetable->setVisible(true);
     }
@@ -213,6 +274,11 @@ class Production extends \App\Pages\Base
         $row->add(new Label('emp_name', $item->emp_name));
         $row->add(new Label('emp_login', $item->login));
         $row->add(new CheckBox('emp_select', new \Zippy\Binding\PropertyBinding($item, 'select')))->onChange($this, 'checkOnSelect', true);
+        $work_id = $this->employeetable->employeework->getAttribute('work_id');
+        $id = $item->employee_id;
+        if(array_key_exists($id, $_SESSION['workemp'][$work_id]) == true){
+            $row->emp_select->setChecked(true);
+        }
     }
 
     public function checkOnSelect($sender)
@@ -220,68 +286,107 @@ class Production extends \App\Pages\Base
         $items = $sender->getOwner()->getDataItem();
         $chk = $sender->isChecked();
         $emp_id = $items->getID();
-        foreach ($this->employeelists as $empl){
-            if($empl->emp_id == $emp_id){
-                $empl->select = $chk;
+        $item = $items->getData();
+        $work_id = $this->employeetable->employeework->getAttribute('work_id');
+        if($chk == true){
+            $_SESSION['workemp'][$work_id][$emp_id] = $item['emp_name'];
+        }else{
+            if(array_key_exists($emp_id, $_SESSION['workemp'][$work_id]) == true){
+                unset($_SESSION['workemp'][$work_id][$emp_id]);
             }
         }
-        foreach ($this->worklists as $wrkl){
 
-            if($wrkl->getID() == $this->work_id){
-                $wrkl->emp[$emp_id] = $items->emp_name;
-                $wrkl->show .= $items->emp_name . ", ";
-            }
-        }
+//        foreach ($this->employeelists as $empl){
+//            if($empl->emp_id == $emp_id){
+//                $empl->select = $chk;
+//            }
+//        }
+//        foreach ($this->worklists as $wrkl){
+//
+//            if($wrkl->getID() == $this->work_id){
+//                $wrkl->emp[$emp_id] = $items->emp_name;
+//                $wrkl->show .= $items->emp_name . ", ";
+//            }
+//        }
         $this->updateAjax(array('emp_select'));
     }
 
     public function saveOnClick($sender){
         $work_id = $this->work_id;
+        $this->worktable->worklist->Reload();
+        $this->filterwork->setVisible(true);
         $this->worktable->setVisible(true);
         $this->employeetable->setVisible(false);
-
+        $this->filteremp->setVisible(false);
     }
 
     public function cancelOnClick($sender) {
+        $this->filterwork->setVisible(true);
         $this->worktable->setVisible(true);
         $this->employeetable->setVisible(false);
+        $this->filteremp->setVisible(false);
     }
 
     public function saveProductOnClick($sender){
         $model_id = $this->modelID;
         $size = $this->size;
         $arr_size = explode("-", $size);
-//        $txt_size = "";
-//        for($i = intval(trim($arr_size[0])); $i <= intval(trim($arr_size[1])); $i++){
-//            $rnd = mt_rand(0, 20);
-//            $txt_size .= "<size>" . $i . "</size>" . "<quantity>" . $rnd . "</quantity>";
-//        }
+        $txt_size = "";
+        for($i = intval(trim($arr_size[0])); $i <= intval(trim($arr_size[1])); $i++){
+            $rnd = 0;//mt_rand(0, 20);
+            $txt_size .= "<size>" . $i . "</size>" . "<quantity>" . $rnd . "</quantity>";
+        }
         $conn = \ZDB\DB::getConnect();
 
+        $work_emp = $_SESSION['workemp'];
+        $work_id = array_keys($work_emp);
+        $count_works = count($work_id);
+//        $str_work_in = "'" . implode("','", $work_id) . "'";
+
+        $sql = "SELECT pt.detail as work_id, pt.model_item as workname FROM pasport_tax pt 
+                WHERE pt.qty_material = false AND pasport_id = '{$model_id}'"; // AND pt.id IN(" . $str_work_in . ")"
+        $rs = $conn->Execute($sql);
+
         $is_work = true;
-        foreach ($this->worklists as $wl){
-            if($wl->emp == null){
-                $is_work = false;
-                break;
-            }
+        $pasport_work = [];
+        foreach ($rs as $r){
+            preg_match('/\<work\>([0-9 ]+)\<\/work\>/i', $r['work_id'], $match);
+            $pasport_work[$match[1]] = $r['workname'];
         }
+
+        $count_works_pasport = count($pasport_work);
+        if($count_works != $count_works_pasport) $is_work = false;
+
         if($is_work == true){
             $upd = "UPDATE model SET in_work = true WHERE pasport_id = " . $model_id;
             $conn->Execute($upd);
-            foreach ($this->worklists as $wrkl){
-                $emps = $wrkl->emp;
-                foreach ($emps as $key=>$emp){
-                    $txt_size = "";
-                    for($i = intval(trim($arr_size[0])); $i <= intval(trim($arr_size[1])); $i++){
-                        $rnd = mt_rand(0, 20);
-                        $txt_size .= "<size>" . $i . "</size>" . "<quantity>" . $rnd . "</quantity>";
-                    }
-                    $detail = "<master>" . $emp . "</master>" . "<work>" . $wrkl->work . "</work>" . $txt_size;
-                    $sql = "INSERT INTO masters(typework_id, emp_id, pasport_id, detail) 
-                            VALUES ('{$wrkl->id}', '{$key}', '{$model_id}', '{$detail}')";
+            foreach ($work_emp as $wrk=>$emps){
+                foreach ($emps as $empid=>$empname){
+//                    $txt_size = "";
+//                    for($i = intval(trim($arr_size[0])); $i <= intval(trim($arr_size[1])); $i++){
+//                        $rnd = mt_rand(1, 15);
+//                        $txt_size .= "<size>" . $i . "</size>" . "<quantity>" . $rnd . "</quantity>";
+//                    }
+                    $detail = "<master>" . $empname . "</master>" . "<work>" . $pasport_work[$wrk] . "</work>" . $txt_size;
+                    $sql = "INSERT INTO masters(typework_id, emp_id, pasport_id, detail)
+                            VALUES ('{$wrk}', '{$empid}', '{$model_id}', '{$detail}')";
                     $conn->Execute($sql);
                 }
             }
+//            foreach ($this->worklists as $wrkl){
+//                $emps = $wrkl->emp;
+//                foreach ($emps as $key=>$emp){
+//                    $txt_size = "";
+//                    for($i = intval(trim($arr_size[0])); $i <= intval(trim($arr_size[1])); $i++){
+//                        $rnd = mt_rand(1, 15);
+//                        $txt_size .= "<size>" . $i . "</size>" . "<quantity>" . $rnd . "</quantity>";
+//                    }
+//                    $detail = "<master>" . $emp . "</master>" . "<work>" . $wrkl->work . "</work>" . $txt_size;
+//                    $sql = "INSERT INTO masters(typework_id, emp_id, pasport_id, detail)
+//                            VALUES ('{$wrkl->id}', '{$key}', '{$model_id}', '{$detail}')";
+//                    $conn->Execute($sql);
+//                }
+//            }
             $js2 = "
                  let orig = window.location.origin;
                  window.location = orig + '/index.php?p=/App/Pages/Production'              
@@ -341,12 +446,14 @@ class Production extends \App\Pages\Base
 
     public function cancelProductOnClick($sender){
         $this->worklists = [];
+        $this->filterwork->setVisible(false);
         $this->worktable->setVisible(false);
         $this->detailProduction->setVisible(true);
     }
 
     public function modelUpdateOnClick($sender){
         $item = $sender->getOwner()->getDataItem();
+//        $in_work = $item->in_work;
         $this->pasportID = $item->id;
         $this->updateDefectForm->showdefectmodel->setText($item->modelName . ", " . $item->size);
 
@@ -433,32 +540,184 @@ class Production extends \App\Pages\Base
         $pasport_id = $sender->getOwner()->getDataItem()->id;
         //удалить записи в masters, defect_model
         $conn = \ZDB\DB::getConnect();
-        $sql_del = "SELECT t.id as typework_id, m.id as model_id FROM typework t, model m 
-                    WHERE m.pasport_id = t.pasport_id AND t.pasport_id = " . $pasport_id;
+        $sql_del = "SELECT DISTINCT md.id as model_id FROM masters m, model md 
+                    WHERE m.finished = false AND md.pasport_id = m.pasport_id AND m.pasport_id = " . $pasport_id;
+
         $rs = $conn->Execute($sql_del);
 
         $model_id = 0;
-        $typework = [];
         foreach ($rs as $r){
             $model_id = intval($r['model_id']);
-            $typework[] = intval($r['typework_id']);
         }
-//        $typework_list = implode("','", $typework);
-//        $sql = "DELETE FROM masters WHERE typework_id IN('{$typework_list}')";
-//        $conn->Execute($sql);
-//
-//        $sql_defect = "DELETE FROM defect_model WHERE model_id = " . $model_id;
-//        $conn->Execute($sql_defect);
-//
-//        $sql_typework = "DELETE FROM typework WHERE pasport_id = " . $pasport_id;
-//        $conn->Execute($sql_typework);
-//
-//        $sql_model = "UPDATE model SET in_work = false WHERE pasport_id = " . $pasport_id;
-//        $conn->Execute($sql_model);
+
+        $sql = "DELETE FROM masters WHERE pasport_id = " . $pasport_id;
+        $conn->Execute($sql);
+
+        $sql_defect = "DELETE FROM defect_model WHERE model_id = " . $model_id;
+        $conn->Execute($sql_defect);
+
+        $sql_model = "UPDATE model SET in_work = false WHERE pasport_id = " . $pasport_id;
+        $conn->Execute($sql_model);
 
         App::Redirect("\\App\\Pages\\Production");
     }
 }
+
+class ItemDataWorkModel implements \Zippy\Interfaces\DataSource
+{
+    private $page;
+
+    public function __construct($page) {
+        $this->page = $page;
+    }
+
+    private function getWhere($p = false) {
+
+        $form = $this->page->filterwork;
+        $where = "1=1";
+        $text = trim($form->searchkeywork->getText()); //"";
+        $cat = $form->searchcatwork->getValue(); //$cat = 9
+        $showdis = $form->showdiswork->isChecked();
+
+        $pasport_id = $form->getAttribute('pasport_id');
+        if($pasport_id != null || $pasport_id != ""){
+            $conn = \ZDB\DB::getConnect();
+            $sql = "SELECT ExtractValue(pt.detail,'/work') as id from pasport_tax pt
+            WHERE pt.pasport_id = '{$pasport_id}' AND pt.qty_material = false";
+            $rs = $conn->Execute($sql);
+            $str_work = "";
+
+            if($showdis == true){
+                $works_show = $_SESSION['workemp'];
+                if(count($works_show) == 0) $str_work = "'0',";
+                foreach ($works_show as $kw=>$vw){
+                    $str_work .= "'" . $kw . "'" . ",";
+                }
+            }else{
+                foreach ($rs as $r){
+                    $str_work .= "'" . $r['id'] . "'" . ",";
+                }
+            }
+
+            $str_work = substr($str_work, 0, -1);
+            $where = $where . " and id IN(" . $str_work . ") ";
+        }
+
+        if ($cat != 0) {
+            if ($cat == -1) {
+                $where = $where . " and parealist_id=0";
+            } else {
+                $where = $where . " and parealist_id=" . $cat;
+            }
+        }
+
+        if ($showdis == true && ($pasport_id == "" || $pasport_id == null)) {
+            $kind_arr = $_SESSION['kindwork'];
+            $str_id = "";
+            foreach ($kind_arr as $key=>$val){
+                if($key == 0 || $key == "0") continue;
+                $str_id .= "'{$key}'" . ",";
+            }
+            $str_id = substr($str_id, 0, -1);
+            if($str_id == "") $str_id = "'0'";
+            $where = $where . " and id IN(" . $str_id . ")";
+        } else {
+//            $where = $where . " and disabled <> 1";
+        }
+        if (strlen($text) > 0) {
+            if ($p == false) {
+                $text = Kind::qstr('%' . $text . '%');
+                $where = $where . " and (work like {$text} )  ";
+            } else {
+                $text = Kind::qstr($text);
+                $where = $where . " and (work = {$text} )  ";
+            }
+        }
+        return $where;
+    }
+
+    public function getItemCount() {
+        return Kind::findCnt($this->getWhere());
+    }
+
+    public function getItems($start, $count, $sortfield = null, $asc = null) {
+//        $l = Item::find($this->getWhere(true), "itemname asc", $count, $start);
+        $l = Kind::find($this->getWhere(true), "work asc", $count, $start);
+        $f = Kind::find($this->getWhere(), "work asc", $count, $start);
+        foreach ($f as $k => $v) {
+            $l[$k] = $v;
+        }
+
+        return $l;
+    }
+
+    public function getItem($id) {
+        return Kind::load($id);
+    }
+
+}
+
+class ItemDataWorkEmp implements \Zippy\Interfaces\DataSource
+{
+    private $page;
+
+    public function __construct($page) {
+        $this->page = $page;
+    }
+
+    private function getWhere($p = false) {
+
+        $form = $this->page->filteremp;
+        $where = "1=1";
+        $text = trim($form->searchkeyemp->getText()); //"";
+//        $cat = $form->searchcatemp->getValue();
+        $showdis = $form->showdisemp->isChecked();
+
+        if ($showdis == true) {
+            $work_id = $this->page->employeetable->employeework->getAttribute('work_id');
+            $emp_arr = $_SESSION['workemp'][$work_id];
+            $str_id = "";
+            foreach ($emp_arr as $ke=>$ve){
+                   $str_id .= "'{$ke}'" . ",";
+            }
+            $str_id = substr($str_id, 0, -1);
+            if($str_id == "") $str_id = "'0'";
+            $where = $where . " and employee_id IN(" . $str_id . ")";
+        } else {
+//            $where = $where . " and disabled <> 1";
+        }
+        if (strlen($text) > 0) {
+            if ($p == false) {
+                $text = \App\Entity\Employee::qstr('%' . $text . '%');
+                $where = $where . " and (emp_name like {$text} )  ";
+            } else {
+                $text = \App\Entity\Employee::qstr($text);
+                $where = $where . " and (emp_name = {$text} )  ";
+            }
+        }
+        return $where;
+    }
+
+    public function getItemCount() {
+        return \App\Entity\Employee::findCnt($this->getWhere());
+    }
+
+    public function getItems($start, $count, $sortfield = null, $asc = null) {
+        $l = \App\Entity\Employee::find($this->getWhere(true), "emp_name asc", $count, $start);
+        $f = \App\Entity\Employee::find($this->getWhere(), "emp_name asc", $count, $start);
+        foreach ($f as $k => $v) {
+            $l[$k] = $v;
+        }
+
+        return $l;
+    }
+
+    public function getItem($id) {
+        return \App\Entity\Employee::load($id);
+    }
+
+}
+
 
 class EmpWork implements \Zippy\Interfaces\DataItem{
     public $emp_id;

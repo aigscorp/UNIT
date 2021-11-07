@@ -8,7 +8,7 @@ define('_BASEURL', $http . "://" . $_SERVER["HTTP_HOST"] . '/');
 
 define('UPLOAD_USERS', 'uploads/users/');
 
-date_default_timezone_set('Europe/Kiev');
+date_default_timezone_set('Europe/Moscow');
 
 //@ini_set('memory_limit', -1); 
 

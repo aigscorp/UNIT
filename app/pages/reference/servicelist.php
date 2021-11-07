@@ -13,11 +13,13 @@ use Zippy\Html\Form\TextInput;
 use Zippy\Html\Label;
 use Zippy\Html\Link\ClickLink;
 use Zippy\Html\Panel;
+use \Zippy\Html\Form\DropDownChoice;
 
 class ServiceList extends \App\Pages\Base
 {
 
     private $_service;
+    public $area;
 
     public function __construct() {
         parent::__construct();
@@ -29,15 +31,26 @@ class ServiceList extends \App\Pages\Base
         $this->filter->add(new CheckBox('showdis'));
         $this->filter->add(new TextInput('searchkey'));
 
+        $conn = \ZDB\DB::getConnect();
+        $sql = "SELECT pa_id, pa_name FROM parealist";
+        $rs = $conn->Execute($sql);
+        $area = [];
+        foreach ($rs as $r){
+            $area[$r['pa_id']] = $r['pa_name'];
+        }
+        $this->area = $area;
+
         $this->add(new Panel('servicetable'))->setVisible(true);
         $this->servicetable->add(new DataView('servicelist', new ServiceDataSource($this), $this, 'servicelistOnRow'))->Reload();
         $this->servicetable->add(new ClickLink('addnew'))->onClick($this, 'addOnClick');
         $this->servicetable->servicelist->setPageSize(H::getPG());
         $this->servicetable->add(new \Zippy\Html\DataList\Paginator('pag', $this->servicetable->servicelist));
 
+
         $this->add(new Form('servicedetail'))->setVisible(false);
         $this->servicedetail->add(new TextInput('editservice_name'));
         $this->servicedetail->add(new TextInput('editprice'));
+        $this->servicedetail->add(new DropDownChoice('editarea', $area));//->onChange($this, "onEditArea");
         $this->servicedetail->add(new TextInput('editcost'));
         $this->servicedetail->add(new TextInput('edithours'));
         $this->servicedetail->add(new CheckBox('editdisabled'));
@@ -52,7 +65,9 @@ class ServiceList extends \App\Pages\Base
         $row->add(new Label('service_name', $item->service_name));
         $row->add(new Label('price', $item->price));
         $row->add(new Label('cost', $item->cost));
-        $row->add(new Label('hours', $item->hours));
+        $area_name = $this->area[$item->area];
+        $row->add(new Label('area', $area_name));
+//        $row->add(new Label('hours', $item->hours));
         $row->add(new ClickLink('edit'))->onClick($this, 'editOnClick');
         $row->add(new ClickLink('delete'))->onClick($this, 'deleteOnClick');
     }
@@ -77,6 +92,9 @@ class ServiceList extends \App\Pages\Base
         $this->servicetable->setVisible(false);
         $this->servicedetail->setVisible(true);
         $this->servicedetail->editservice_name->setText($this->_service->service_name);
+//        $area = $this->servicedetail->editarea->getOptionList();
+//        $area_id = $this->servicedetail->editarea->getValue();
+        $this->servicedetail->editarea->setValue($this->_service->area);
         $this->servicedetail->editprice->setText($this->_service->price);
         $this->servicedetail->editcost->setText($this->_service->cost);
         $this->servicedetail->edithours->setText($this->_service->hours);
@@ -96,11 +114,13 @@ class ServiceList extends \App\Pages\Base
         if (false == \App\ACL::checkEditRef('ServiceList')) {
             return;
         }
+        /////изменен справочник, добавлено поле производственный участок
 
         $this->_service->service_name = $this->servicedetail->editservice_name->getText();
         $this->_service->price = $this->servicedetail->editprice->getText();
         $this->_service->cost = $this->servicedetail->editcost->getText();
         $this->_service->hours = $this->servicedetail->edithours->getText();
+        $this->_service->area = $this->servicedetail->editarea->getValue();
         if ($this->_service->service_name == '') {
             $this->setError("entername");
             return;

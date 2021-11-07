@@ -1,0 +1,36 @@
+.gamburger{
+    position: absolute;
+    top: 11px;
+    left: 5px;
+}
+.gamburger-text{
+    padding-left: 25px;
+    width: 50%;
+}
+@media screen and (max-width: 480px){
+    td > input[type=number]{
+        width: 50px;
+    }
+    .col-4 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+    th{
+        font-size: .9em;
+    }
+    .gamburger{
+        top: 11px;
+        left: 2px;
+    }
+    .gamburger-text{
+        margin-left: 0px;
+        width: 80%;
+    }
+    .form-group{
+        text-align: center;
+    }
+    input[type=submit]{
+        font-size: .85em;
+
+    }
+}

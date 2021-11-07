@@ -46,11 +46,11 @@ class StockBalance extends \App\Pages\Base
             $firm = $r['firm_name'];
         }
         $d = array();
-        $res = preg_match('/<\inn\>([0-9]+)\<\/inn\>/i', $detail, $d);
+        $res = preg_match('/\<inn\>([0-9]+)\<\/inn\>/i', $detail, $d);
         if($res == true){
             $this->company = $firm . "\\n" . "ИНН " . $d[1] . "\\n";
         }
-        $res = preg_match('/<\phone\>([0-9]+)\<\/phone\>/i', $detail, $d);
+        $res = preg_match('/\<phone\>([0-9]+)\<\/phone\>/i', $detail, $d);
         $this->company .= "Тел: " . $d[1] . "\\n";
 
 

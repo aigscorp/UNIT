@@ -63,9 +63,15 @@ class MasterPage extends \App\Pages\Base
 //                  WHERE m.emp_id = " . $emp_id. " AND k.id = m.typework_id AND md.in_work = true AND p.id = md.pasport_id AND m.finished = false";
 
 
-        $query = "SELECT pmm.id as pasport_id, pmm.name, pmm.size, pmm.comment, pmm.masters_id, pmm.typework_id as work_id, pmm.detail, k.work as type_work 
-                  FROM (SELECT pm.id, pm.name, pm.size, pm.comment, pm.masters_id, m.typework_id, m.detail 
-                  FROM (SELECT p.id, p.name, p.size, p.comment, md.id as masters_id 
+//        $query = "SELECT pmm.id as pasport_id, pmm.name, pmm.size, pmm.comment, pmm.masters_id, pmm.typework_id as work_id, pmm.detail, k.work as type_work
+//                  FROM (SELECT pm.id, pm.name, pm.size, pm.comment, pm.masters_id, m.typework_id, m.detail
+//                  FROM (SELECT p.id, p.name, p.size, p.comment, md.id as masters_id
+//                  FROM pasport p, model md WHERE p.id = md.pasport_id AND md.in_work = true AND md.finished = false) as pm
+//                  LEFT JOIN masters m ON m.pasport_id=pm.id and m.emp_id='{$emp_id}') as pmm, kindworks k WHERE pmm.typework_id = k.id";
+
+        $query = "SELECT pmm.id as pasport_id, pmm.name, pmm.size, pmm.comment, pmm.master_id, pmm.typework_id as work_id, pmm.detail, k.work as type_work 
+                  FROM (SELECT pm.id, pm.name, pm.size, pm.comment, m.typework_id, m.detail, m.id as master_id 
+                  FROM (SELECT p.id, p.name, p.size, p.comment 
                   FROM pasport p, model md WHERE p.id = md.pasport_id AND md.in_work = true AND md.finished = false) as pm 
                   LEFT JOIN masters m ON m.pasport_id=pm.id and m.emp_id='{$emp_id}') as pmm, kindworks k WHERE pmm.typework_id = k.id";
 

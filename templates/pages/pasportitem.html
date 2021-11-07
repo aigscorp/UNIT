@@ -13,7 +13,7 @@
             <div class="row">
                 <div class="col-8">
                     <div class="form-group">
-                        <table class="table table-borderless table-striped">
+                        <table class="table table-borderless table-striped table-sm">
                             <tr>
                                 <th>Материалы</th>
                                 <th>Ед. измерения</th>
@@ -57,16 +57,14 @@
 
     let pag = document.getElementById('pag');
     if(pag != null || pag != undefined) {
-      console.log('pag live');
+      // console.log('pag live');
+      let origin = window.location.origin;
+
       pag.addEventListener('click', (ev) => {
-        // console.log(ev.target);
-        // console.log('LISTENER');
         let elem = ev.target;
-        // console.log('elem = ', elem);
-        // elem.parentElement.innerText;
         let location = window.location.href;
         let pattern = location.match(/\?q=p:\d{1,}/i);
-        console.log('pattern=', pattern[0], location);
+        // console.log('pattern=', pattern[0], location);
         // debugger;
         let current_page = document.querySelector('.page-item.active').innerText;
         let page = elem.innerText;
@@ -81,8 +79,9 @@
         }
         if (qry == "") return;
         pattern[0] += "::itemtable::listform::pag:";
+
         let url = "http://localhost/index.php"; //"?q=p:83::itemtable::listform::pag:"
-        let urlp = "http://localhost/app/pages/proxy.php";
+        let urlp = origin + "/app/pages/proxy.php"; //"http://localhost/app/pages/proxy.php";
         window.location = urlp + pattern[0] + page + qry; //+"::quantity:" + qry;
       });
     }

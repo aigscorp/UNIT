@@ -1,0 +1,265 @@
+<html lang="ru">
+<head>
+    <!--<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css">-->
+    <link rel="stylesheet" href="../../assets/css/model.css">
+</head>
+<body>
+<div class="row">
+    <div zippy="widgetMenu"></div>
+</div>
+<div id="detailProductionShow"></div>
+<!--<div zippy="detailProductionDefect" class="alert alert-dark alert-dismissible fade show" role="alert">-->
+    <!--<strong zippy="detailDefect"></strong>-->
+    <!--<button type="button" class="close" data-dismiss="alert" aria-label="Close">-->
+        <!--<span aria-hidden="true">&times;</span>-->
+    <!--</button>-->
+<!--</div>-->
+
+<div class="row">
+    <div zippy="modeltable" class="col-12 col-md-12 col-lg-10">
+        <h3>Список моделей</h3>
+        <div class="navbar nav">
+
+            <form zippy="filtermodel" class="form-inline">
+
+                <label for="searchkeymodel">Поиск</label>
+                <input class="form-control mr-2" type="text" zippy="searchkeymodel" onkeydown="onSearch()">
+
+                <div class="form-check">
+
+                    <input title="Показать неактуальные" class="form-check-input" type="checkbox" zippy="showdismodel">
+                    <label class="form-check-label mr-3" for="showdismodel">Показать все</label>
+                </div>
+
+                <input class="btn btn-outline-success  " type="submit" value="ОК">
+
+            </form>
+        </div>
+        <a zippy="addnew" class="btn btn-outline-primary btn-sm">Добавить модель</a>
+        <table class="table table-hover   table-sm">
+            <tr>
+                <th>Наименование</th>
+                <th>Количество</th>
+                <th>Заказчик</th>
+                <th>№ Заказ</th>
+                <th>В работе</th>
+                <th>Изображение</th>
+                <th></th>
+                <th></th>
+            </tr>
+            <tr zippy="modellist">
+                <td ><a zippy="model_name"></a></td>
+                <td zippy="model_qty"></td>
+                <td zippy="model_order"></td>
+                <td zippy="model_order_num"></td>
+                <td zippy="model_inwork"></td>
+                <td>
+                    <a zippy="imagelistmodel" data-type="image" data-toggle="lightbox"> <img
+                            style="float:left; width:48px; border-radius: 50%;"></a>
+                </td>
+                <td>
+                    <a zippy="show" title="Просмотр"><i class="fa fa-eye"></i></a>
+                </td>
+                <td style="width:72px">
+
+                    <a zippy="edit" title="Редактирование" ><i class="fa fa-edit"></i></a>
+                    <a zippy="delete" title="В (из) архив" ><i class="fa fa-trash"></i></a>
+                </td>
+            </tr>
+        </table>
+        <div zippy="pag"></div>
+    </div>
+
+    <div class="col-12 col-md-10  col-lg-8">
+        <form zippy="modeldetail">
+            <h3>Модель в производство</h3>
+            <div class="row">
+                <div class="col-6">
+                    <div class="form-group">
+                        <label for="model_pas">Выбрать паспорт</label>
+                        <select class="form-control" zippy="detail_model_pas">
+                            <option value="-1">Не указан</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="model_qty">Количество комплектов</label>
+                        <input required="required" zippy="detail_model_qty" class="form-control">
+                    </div>
+
+                </div>
+                <div class="col-6">
+                    <div class="form-group">
+                        <label for="model_order">Выбрать заказ</label>
+                        <select class="form-control" zippy="detail_model_order">
+                            <option value="-1">Не указан</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12">
+                    <div class="form-group">
+                        <a zippy="addworks">Выбор работников для модели</a>
+                    </div>
+
+                    <div zippy="modelPanel" class="row" style="align-items: flex-end">
+                        <div class="col-5">
+                            <div class="form-group">
+                                <label for="model_work">Вид работы</label>
+                                <select class="form-control" zippy="model_work">
+                                    <option value="-1">Не указан</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-5">
+                            <div class="form-group">
+                                <label for="model_emp">Выбор работника</label>
+                                <select class="form-control" zippy="model_emp">
+                                    <option value="-1">Не указан</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-2">
+                            <div class="form-group">
+                                <!--<button zippy="add_workemp" class="btn btn-primary">Добавить</button>-->
+                                <a zippy="add_workemp" title="Добавить"><i class="fa fa-plus-circle"></i></a>
+                                <a zippy="del_workemp" title="Удалить"><i class="fa fa-trash"></i></a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <table class="table table-sm" zippy="report">
+
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="form-group">
+                        <input zippy="save" type="submit" value="В производство" class="btn btn-primary">
+                        <input zippy="saveas" type="submit" value="Сохранить" class="btn btn-outline-primary">&nbsp;&nbsp;
+                        <input zippy="cancel" type="button" value="Отменить" class="btn btn-light  ">
+                    </div>
+                </div>
+
+            </div>
+        </form>
+    </div>
+
+</div>
+
+
+<!--<div id="model"></div>-->
+
+<div class="row">
+<div class="navbar nav">
+
+    <form zippy="filterwork" class="form-inline">
+        <label for="searchkeywork">Поиск</label>
+        <input class="form-control mr-2" type="text" zippy="searchkeywork" onkeydown="onSearch()">
+        <label for="searchcatwork"> производ. участок</label>
+        <select class="form-control mr-2" zippy="searchcatwork">
+            <option value="0">Не задана</option>
+        </select>
+        <div class="form-check">
+            <input title="Показать неактуальные" class="form-check-input" type="checkbox" zippy="showdiswork">
+            <label class="form-check-label mr-3" for="showdiswork">Показать выбранные</label>
+        </div>
+
+        <input class="btn btn-outline-success  " type="submit" value="ОК">
+
+    </form>
+</div>
+
+    <form zippy="worktable" class="col-12 col-md-10 col-lg-8">
+        <h3>Список работ</h3>
+        <table class="table table-hover   table-sm">
+            <tr>
+                <th>Работа</th>
+                <th>Выбрать</th>
+                <th>В работе</th>
+                <th></th>
+            </tr>
+            <tr zippy="worklist">
+                <td zippy="work_name"></td>
+                <td><a zippy="work_select">выбрать работника</a></td>
+                <td zippy="work_master"></td>
+            </tr>
+        </table>
+        <div zippy="pagwork"></div>
+        <div class="form-group">
+            <input zippy="saveWork" type="submit" value="Сохранить" class="btn btn-outline-primary">
+            <input zippy="cancelWork" type="submit" value="Отменить" class="btn btn-outline-primary">
+        </div>
+    </form>
+
+</div>
+<div class="navbar nav">
+    <form zippy="filteremp" class="form-inline">
+        <label for="searchkeyemp">Поиск</label>
+        <input class="form-control mr-2" type="text" zippy="searchkeyemp" onkeydown="onSearch()">
+        <div class="form-check">
+            <input title="Показать неактуальные" class="form-check-input" type="checkbox" zippy="showdisemp">
+            <label class="form-check-label mr-3" for="showdisemp">Показать выбранные</label>
+        </div>
+        <input class="btn btn-outline-success  " type="submit" value="ОК">
+    </form>
+</div>
+
+<div class="row">
+    <form zippy="employeetable" class="col-12 col-md-10 col-lg-8">
+        <h3 zippy="employeework"></h3>
+        <table class="table table-hover table-sm table-striped">
+            <tr>
+                <th>Работник</th>
+                <th>Логин</th>
+                <th>Выбрать</th>
+                <th></th>
+            </tr>
+            <tr zippy="employeelist">
+                <td zippy="emp_name"></td>
+                <td zippy="emp_login"></td>
+                <td>
+                    <div class="form-check">
+                        <input zippy="emp_select" type="checkbox" class="form-check-input"/>
+                    </div>
+                </td>
+            </tr>
+        </table>
+        <div zippy="pagemp"></div>
+        <div class="form-group">
+            <input zippy="saveEmp" type="submit" value="Сохранить" class="btn btn-outline-primary">
+            <input zippy="cancelEmp" type="submit" value="Отменить" class="btn btn-outline-primary"/>
+        </div>
+    </form>
+</div>
+
+<!--<div class="col-6">-->
+<!--<div class="form-group ">-->
+<!--<label class="col-5 col-form-label">Изображение</label>-->
+
+<!--<div class="col-12">-->
+<!--<img zippy="editimage"><br>-->
+<!--<input type="file" class="form-control" zippy="editaddfile"  accept="image/jpeg,image/png,image/gif">-->
+<!--<div class="form-check">-->
+<!--<input zippy="editdelimage" type="checkbox" class="form-check-input">-->
+<!--<label class="form-check-label" data-label="editdelimage" for="editdelimage">Удалить-->
+<!--избражение</label>-->
+<!--</div>-->
+<!--<small>Изображение  должно  быть примерно квадратным  иначе  будет  обрезано</small>-->
+<!--</div>-->
+<!--</div>-->
+<!--</div>-->
+
+<script>
+  window.onload = function () {
+
+  }
+</script>
+
+</body>
+</html>

@@ -104,7 +104,8 @@ function check_saveSizeCount() {
   return validate_size;
 }
 
-function check_saveModel(){
+function check_savePasport(){
+  console.log('save pasport');
   let res = false;
   let modelName = document.getElementById('modelName');
   let arr = [];
@@ -114,7 +115,7 @@ function check_saveModel(){
   let sizes = document.querySelectorAll('input[type=number]');
   let validate_size = false;
   sizes.forEach((elem)=>{
-    if(elem.value != "" && elem.value != undefined) validate_size = true;
+    if(elem.value != "" && elem.value != undefined && elem.value != 0) validate_size = true;
   });
   if(validate_size == false){
     arr.push("Не указано количество размеров модели");
@@ -141,6 +142,10 @@ function check_saveModel(){
     $('#msg').click();
   }
   return res;
+}
+
+function check_finishProduction() {
+  return confirm("Завершить производство?")
 }
 $(document).ready(function () {
 

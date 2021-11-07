@@ -86,6 +86,7 @@ class PasportList extends \App\Pages\Base
                 WHERE p.id = t.pasport_id AND t.pasport_id=" . $pasport_id;
             $rs = $conn->Execute($sql);
             $items = [];
+            $item_name = [];
             $works = [];
             foreach ($rs as $r) {
                 $modelName = $r['name'];
@@ -97,6 +98,7 @@ class PasportList extends \App\Pages\Base
                     $works[] = $r['model_item'];
                 } else {
                     $items[] = $r['detail'];
+                    $item_name[] = $r['model_item'];
                 }
             }
             $list_work = implode(",", $works);
@@ -112,8 +114,11 @@ class PasportList extends \App\Pages\Base
             $text_material = "";
 
             for ($i = 0; $i < count($items); $i++) {
-                preg_match_all('/\<material\>([а-яА-Яa-zA-Z.,\/ ].*?)\<\/material\>\<quantity\>([0-9.,]+)\<\/quantity\>/i', $items[$i], $all_material);
-                $text_material .= $all_material[1][0] . " <" . $all_material[2][0] . ">,";
+//                preg_match_all('/\<material\>([а-яА-Яa-zA-Z.,\/ ].*?)\<\/material\>\<quantity\>([0-9.,]+)\<\/quantity\>/i', $items[$i], $all_material);
+//                $text_material .= $all_material[1][0] . " <" . $all_material[2][0] . ">,";
+
+                preg_match_all('/\<quantity\>([0-9.,]+)\<\/quantity\>/i', $items[$i], $all_material);
+                $text_material .= $item_name[$i] . " <" . $all_material[1][0] . ">,";
             }
 
             $str_edit_text = $text_material . "::" . $str_to_items . "::" . "edit";
@@ -165,7 +170,7 @@ class MyItemDataSource implements \Zippy\Interfaces\DataSource
     {
         $this->page = $page;
         $conn = \ZDB\DB::getConnect();
-        $sql = "SELECT p.id as id, p.name as name, p.size as size, p.quantity as quantity, m.in_work as work 
+        $sql = "SELECT p.id as id, p.name as name, p.size as size, p.quantity as quantity, m.in_work as work, m.finished as finish 
         FROM pasport p, model m where p.id = m.pasport_id";
         $rs = $conn->Execute($sql);
         foreach ($rs as $r){

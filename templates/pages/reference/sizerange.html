@@ -28,12 +28,64 @@
     <div class="col-12 col-md-10  col-lg-8">
         <form zippy="sizedetail">
             <div class="row">
-                <div class="col-6">
+                <div class="col-10">
                     <div class="form-group">
                         <label for="edit_size">Размер</label>
                         <input required="required" zippy="edit_size" class="form-control">
                         <small>Размеры вводятся в формате, пример 40-45</small>
                     </div>
+                    <table class="table table-hover   table-sm">
+                        <tr>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                        </tr>
+                        <tr zippy="rangelist">
+                            <td>
+                                <div class="form-check" style="margin: 5px 0;">
+                                    <input type="checkbox" zippy="sizerange1" class="form-check-input"/>
+                                    <label class="form-check-label" for="sizerange1" zippy="range1"></label>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="form-check" style="margin: 5px 0;">
+                                    <input type="checkbox" zippy="sizerange2" class="form-check-input"/>
+                                    <label class="form-check-label" for="sizerange2" zippy="range2"></label>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="form-check" style="margin: 5px 0;">
+                                    <input type="checkbox" zippy="sizerange3" class="form-check-input"/>
+                                    <label class="form-check-label" for="sizerange3" zippy="range3"></label>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="form-check" style="margin: 5px 0;">
+                                    <input type="checkbox" zippy="sizerange4" class="form-check-input"/>
+                                    <label class="form-check-label" for="sizerange4" zippy="range4"></label>
+                                </div>
+                            </td>
+
+                        </tr>
+                    </table>
+                    <!--<div class="form-row" style="gap: 80px;">-->
+
+                        <!--<div zippy="rootlistsize">-->
+                            <!--<div class="col">-->
+                            <!--<div zippy="sublistsize">-->
+                                <!--{{#sizeitems}}-->
+                                <!--<div class="form-check" style="margin: 5px 0;">-->
+                                    <!--<input type="checkbox" zippy="checksz" class="form-check-input"/>-->
+                                    <!--<label class="form-check-label" for="checksz">размер {{number}}</label>-->
+                                <!--</div>-->
+                                <!--{{/sizeitems}}-->
+                            <!--</div>-->
+
+                            <!--</div>-->
+                        <!--</div>-->
+                        <!---->
+                    <!--</div>-->
                     <div class="form-group">
                         <input zippy="save" type="submit" value="Сохранить" class="btn btn-primary  ">&nbsp;&nbsp;
                         <input zippy="cancel" type="button" value="Отменить" class="btn btn-light  ">
